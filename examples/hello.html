@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>coffee state machine: example</title>
+  <script type="text/javascript" src="./require-jquery.js"></script>
+  <script type="text/javascript" src="../lib/coffee_state_machine.js"></script>
+  <script type="text/javascript">
+
+    require(["jquery", "state_machine"], function($, state_machine) {
+        $(function() {
+
+            function log(msg) {
+                $("body").append("<p>"+msg+"</p>");
+            }
+
+            log("coffee_state_machine loaded.");
+
+            window._sm = state_machine;
+        });
+    });
+  </script>
+</head>
+<body>
+</body>
+</html>

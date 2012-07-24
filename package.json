@@ -1,0 +1,16 @@
+{
+  "name": "coffee_state_machine",
+  "version": "0.0.1",
+  "engines": {
+    "node": "0.8.3"
+  },
+  "scripts": {"test": "./node_modules/mocha/bin/mocha"},
+  "dependencies":{
+    "mocha": "latest",
+    "should": "latest",
+    "sinon": "latest",
+    "docco": "latest",
+    "coffee-script": "latest",
+    "uglify-js": "latest"
+  }
+}
