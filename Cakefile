@@ -1,6 +1,6 @@
 {exec} = require "child_process"
 
-REPORTER = "nyan"
+REPORTER = "spec"  #"nyan"
 
 task "build", "build sources", ->
     exec "./node_modules/.bin/coffee -o lib/ -l -c src/coffee_state_machine.coffee", (err, output) ->

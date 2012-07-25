@@ -5,11 +5,25 @@ event_factory = ->
 
 
 state_machine = (stateAttrName, options, fn) ->
-    console.log "creating state_machine -->", stateAttrName, options
+
+    # create new object from given class [ option -> 'constructor' ]
+    #  or
+    # create new or extend given object [ option -> 'extend' ]
+    #
+    if typeof options.class is 'function'
+        obj = new options.class
+    else
+        obj = options.extend ? {}
+
+    # add state attribute to object
+    obj[stateAttrName] = options.initial ? "_unknown"
+
     fn()
 
+    return obj
 
-# ===== CommonJS and AMD support ===== {{{
+
+# ===== CommonJS and AMD support ====== {{{
 if typeof define is 'function' and define.amd
     define "state_machine", -> state_machine
 else
