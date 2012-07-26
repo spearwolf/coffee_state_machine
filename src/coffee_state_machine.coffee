@@ -1,10 +1,10 @@
-
-event_factory = ->
-    return (eventName) ->
-        console.log "create event:", eventName
-
+# coffee_state_machine.coffee - created 2012 by Wolfger Schramm <wolfger@spearwolf.de>
 
 state_machine = (stateAttrName, options, fn) ->
+
+    # options are optional
+    if typeof options is 'function' and typeof fn is 'undefined'
+        [fn, options] = [options, {}]
 
     # create new object from given class [ option -> 'class' ]
     #  or
@@ -18,8 +18,17 @@ state_machine = (stateAttrName, options, fn) ->
     # add state attribute to object
     obj[stateAttrName] = options.initial ? "_unknown"
 
+    # state helper function
+    #
+    valid_states = {}
+
+    state_builder = (state) -> valid_states[state] or= {}
+    state_builder.initial = (initialState) -> obj[stateAttrName] = initialState
+
+    obj.is_valid_state = (state) -> valid_states[state]?
+
     # call given function within context of state object
-    fn.call obj
+    fn.call obj, state_builder
 
     return obj
 

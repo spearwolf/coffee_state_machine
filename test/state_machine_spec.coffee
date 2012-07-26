@@ -57,3 +57,45 @@ describe "state_machine", ->
         sm.gulp.should.be.equal self.gulp
 
 
+    it "should call given callback function with state helper function as first parameter", ->
+
+        state_func = undefined
+
+        state_machine "state", (state) -> state_func = state
+
+        should.exist state_func
+        state_func.should.be.a "function"
+
+
+describe "state helper function", ->
+
+    it "should have .initial() method to set initial state", ->
+
+        state_func1 = undefined
+
+        sm = state_machine "state", (state) ->
+
+            state.initial "foo"
+
+            state_func1 = state
+
+        should.exist state_func1
+        state_func1.should.be.a "function"
+        state_func1.initial.should.be.a "function"
+        sm.state.should.be.equal "foo"
+
+
+    it "should register a new state if called", ->
+
+        sm = state_machine "state", initial: 'idle', (state) ->
+
+            state "running"
+
+            state "waiting"
+
+
+        sm.is_valid_state("running").should.be.ok
+        sm.is_valid_state("waiting").should.be.ok
+        sm.is_valid_state("foobar").should.be.not.ok
+
+
