@@ -40,3 +40,20 @@ describe "state_machine", ->
         sm.bar.should.be.equal 42
         sm.state.should.be.equal "foobar"
 
+
+    it "should call given callback function within context of state object", ->
+
+        plah =
+            foo: 111
+
+        self = null
+
+        sm = state_machine "state", initial: "idle", extend: plah, ->
+            self = @
+            @gulp = 23
+
+        sm.should.be.equal self
+        sm.gulp.should.be.equal 23
+        sm.gulp.should.be.equal self.gulp
+
+

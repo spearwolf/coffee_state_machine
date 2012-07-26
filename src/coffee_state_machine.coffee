@@ -6,7 +6,7 @@ event_factory = ->
 
 state_machine = (stateAttrName, options, fn) ->
 
-    # create new object from given class [ option -> 'constructor' ]
+    # create new object from given class [ option -> 'class' ]
     #  or
     # create new or extend given object [ option -> 'extend' ]
     #
@@ -18,7 +18,8 @@ state_machine = (stateAttrName, options, fn) ->
     # add state attribute to object
     obj[stateAttrName] = options.initial ? "_unknown"
 
-    fn()
+    # call given function within context of state object
+    fn.call obj
 
     return obj
 
