@@ -15,9 +15,6 @@ state_machine = (stateAttrName, options, fn) ->
     else
         obj = options.extend ? {}
 
-    # add state attribute to object
-    obj[stateAttrName] = options.initial ? "_unknown"
-
     # state helper function
     #
     valid_states = {}
@@ -29,6 +26,12 @@ state_machine = (stateAttrName, options, fn) ->
 
     # call given function within context of state object
     fn.call obj, state_builder
+
+    # add state attribute to object
+    obj[stateAttrName] or= options.initial
+
+    # auto create state definition for initial state
+    state_builder obj[stateAttrName]
 
     return obj
 

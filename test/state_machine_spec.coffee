@@ -67,6 +67,23 @@ describe "state_machine", ->
         state_func.should.be.a "function"
 
 
+    it "should auto create state definition for initial state from options", ->
+
+        sm = state_machine "state", initial: "idle", ->
+
+        should.exist sm
+        sm.is_valid_state("idle").should.be.ok
+
+
+    it "should auto create state definition for initial state set with state.initial()", ->
+
+        sm = state_machine "state", (state) -> state.initial "plah"
+
+        should.exist sm
+        sm.is_valid_state("plah").should.be.ok
+
+
+
 describe "state helper function", ->
 
     it "should have .initial() method to set initial state", ->
