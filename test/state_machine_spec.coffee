@@ -90,7 +90,7 @@ describe "state_machine", ->
         transition_func.type.should.be.equal 'coffee_state_machine.TransitionHelperFunction'
 
 
-    it "should auto create state definition for initial state from options", ->
+    it "should implicit register state from option 'initial'", ->
 
         sm = state_machine "state", initial: "idle", ->
 
@@ -99,7 +99,7 @@ describe "state_machine", ->
         sm.is_valid_state("plah").should.be.not.ok
 
 
-    it "should auto create state definition for initial state set with state.initial()", ->
+    it "should implicit register state for initial state defined by state.initial()", ->
 
         sm = state_machine "state", (state) -> state.initial "plah"
 
@@ -141,7 +141,7 @@ describe "state helper function", ->
         sm.is_valid_state("foobar").should.be.not.ok
 
 
-    it "should register parent state if called with option 'parent'", ->
+    it "should implicit register parent state if called with option 'parent'", ->
 
         sm = state_machine "state", initial: 'idle', (state) ->
 
