@@ -20,7 +20,14 @@ state_machine = (stateAttrName, options, fn) ->
     #
     all_states = {}
 
-    state_builder = (state) -> all_states[state] or= {}
+    create_state = (state, parent) ->
+        state_def = all_states[state] or= state: state
+        state_def.parent = parent if parent?
+
+    state_builder = (state, options = {}) ->
+        create_state state, options.parent
+        create_state options.parent if options.parent?
+
     state_builder.type = 'coffee_state_machine.StateHelperFunction'
     state_builder.initial = (initialState) -> obj[stateAttrName] = initialState
 
@@ -60,6 +67,8 @@ state_machine = (stateAttrName, options, fn) ->
 
     # auto create state definition for initial state
     state_builder obj[stateAttrName]
+
+    #obj.all_states = -> all_states
 
     return obj
 

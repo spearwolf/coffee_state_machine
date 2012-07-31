@@ -141,6 +141,20 @@ describe "state helper function", ->
         sm.is_valid_state("foobar").should.be.not.ok
 
 
+    it "should register parent state if called with option 'parent'", ->
+
+        sm = state_machine "state", initial: 'idle', (state) ->
+
+            state "running", parent: 'motion'
+
+            state "idle", parent: 'downtime'
+
+        sm.is_valid_state("running").should.be.ok
+        sm.is_valid_state("idle").should.be.ok
+        sm.is_valid_state("motion").should.be.ok
+        sm.is_valid_state("downtime").should.be.ok
+
+
 
 describe "event helper function", ->
 
