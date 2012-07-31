@@ -15,17 +15,45 @@ state_machine = (stateAttrName, options, fn) ->
     else
         obj = options.extend ? {}
 
+
     # state helper function
     #
-    valid_states = {}
+    all_states = {}
 
-    state_builder = (state) -> valid_states[state] or= {}
+    state_builder = (state) -> all_states[state] or= {}
+    state_builder.type = 'coffee_state_machine.StateHelperFunction'
     state_builder.initial = (initialState) -> obj[stateAttrName] = initialState
 
-    obj.is_valid_state = (state) -> valid_states[state]?
+    obj.is_valid_state = (state) -> all_states[state]?
+
+
+    # event helper function
+    #
+    current_event = null
+
+    event_builder = (event, callback) ->
+
+        event_fn = obj[event] or= ->
+            # TODO go through transisitions
+
+        if typeof callback is 'function'
+            current_event = event
+            callback.call obj
+            current_event = null
+
+    event_builder.type = 'coffee_state_machine.EventHelperFunction'
+
+
+    # transition helper function
+    #
+    transition_builder = (args...) ->
+        # TODO create transisitions
+
+    transition_builder.type = 'coffee_state_machine.TransitionHelperFunction'
+
 
     # call given function within context of state object
-    fn.call obj, state_builder
+    fn.call obj, state_builder, event_builder, transition_builder
 
     # add state attribute to object
     obj[stateAttrName] or= options.initial

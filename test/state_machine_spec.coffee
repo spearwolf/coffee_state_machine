@@ -5,7 +5,7 @@ describe "state_machine", ->
 
     it "should return an object", ->
 
-        sm = state_machine "state", initial: "idle", -> false
+        sm = state_machine "state", initial: "idle", ->
 
         should.exist sm
         sm.should.be.a "object"
@@ -13,7 +13,7 @@ describe "state_machine", ->
 
     it "should return an object with initialized state attribute", ->
 
-        sm = state_machine "state", initial: "idle", -> false
+        sm = state_machine "state", initial: "idle", ->
 
         sm.state.should.be.equal "idle"
 
@@ -23,7 +23,7 @@ describe "state_machine", ->
         foo =
             bar: 23
 
-        sm = state_machine "state", initial: "idleidle", extend: foo, -> false
+        sm = state_machine "state", initial: "idleidle", extend: foo, ->
 
         sm.should.be.equal foo
         sm.bar.should.be.equal 23
@@ -35,7 +35,7 @@ describe "state_machine", ->
         class Foo
             constructor: -> @bar = 42
 
-        sm = state_machine "state", initial: "foobar", class: Foo, -> false
+        sm = state_machine "state", initial: "foobar", class: Foo, ->
 
         sm.bar.should.be.equal 42
         sm.state.should.be.equal "foobar"
@@ -65,6 +65,29 @@ describe "state_machine", ->
 
         should.exist state_func
         state_func.should.be.a "function"
+        state_func.type.should.be.equal 'coffee_state_machine.StateHelperFunction'
+
+
+    it "should call given callback function with event helper function as second parameter", ->
+
+        event_func = undefined
+
+        state_machine "state", (state, event) -> event_func = event
+
+        should.exist event_func
+        event_func.should.be.a "function"
+        event_func.type.should.be.equal 'coffee_state_machine.EventHelperFunction'
+
+
+    it "should call given callback function with transition helper function as third parameter", ->
+
+        transition_func = undefined
+
+        state_machine "state", (state, event, transition) -> transition_func = transition
+
+        should.exist transition_func
+        transition_func.should.be.a "function"
+        transition_func.type.should.be.equal 'coffee_state_machine.TransitionHelperFunction'
 
 
     it "should auto create state definition for initial state from options", ->
@@ -73,6 +96,7 @@ describe "state_machine", ->
 
         should.exist sm
         sm.is_valid_state("idle").should.be.ok
+        sm.is_valid_state("plah").should.be.not.ok
 
 
     it "should auto create state definition for initial state set with state.initial()", ->
@@ -81,6 +105,7 @@ describe "state_machine", ->
 
         should.exist sm
         sm.is_valid_state("plah").should.be.ok
+        sm.is_valid_state("idle").should.be.not.ok
 
 
 
@@ -114,5 +139,20 @@ describe "state helper function", ->
         sm.is_valid_state("running").should.be.ok
         sm.is_valid_state("waiting").should.be.ok
         sm.is_valid_state("foobar").should.be.not.ok
+
+
+
+describe "event helper function", ->
+
+    it "should create a function for each event", ->
+
+        sm = state_machine "state", initial: 'idle', (state, event) ->
+
+            event "start"
+
+            event "stop"
+
+        sm.start.should.be.a "function"
+        sm.stop.should.be.a "function"
 
 
