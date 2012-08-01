@@ -198,6 +198,49 @@ describe "transition helper function", ->
         should.not.exist sm.stop.transitions.idle
 
 
+    it "should create conditional state transition definition if defined by transition.on()", ->
+
+        freezed = no
+        sm = state_machine "state", (state, event, transition) ->
+
+            state.initial "idle"
+            state "walking"
+
+            event "go", ->
+                transition.on "idle", to: "walking", if: -> not freezed
+
+            event "gogogo", ->
+                transition.on "idle", to: "walking"
+
+            event "stop", ->
+                transition.on "walking", to: "idle", if: -> not freezed
+
+        sm.go.should.be.a 'function'
+        sm.go.transitions.should.be.a 'object'
+        sm.go.transitions.idle.should.be.a 'object'
+        sm.go.transitions.idle.on.should.be.equal 'idle'
+        sm.go.transitions.idle.to.should.be.equal 'walking'
+        sm.go.transitions.idle.if.should.be.a 'function'
+        should.not.exist sm.go.transitions.walking
+
+        sm.gogogo.should.be.a 'function'
+        sm.gogogo.transitions.should.be.a 'object'
+        sm.gogogo.transitions.idle.should.be.a 'object'
+        sm.gogogo.transitions.idle.on.should.be.equal 'idle'
+        sm.gogogo.transitions.idle.to.should.be.equal 'walking'
+        should.not.exist sm.gogogo.transitions.idle.if
+        should.not.exist sm.gogogo.transitions.walking
+
+        sm.stop.should.be.a 'function'
+        sm.stop.transitions.should.be.a 'object'
+        sm.stop.transitions.walking.should.be.a 'object'
+        sm.stop.transitions.walking.on.should.be.equal 'walking'
+        sm.stop.transitions.walking.to.should.be.equal 'idle'
+        sm.stop.transitions.walking.if.should.be.a 'function'
+        should.not.exist sm.stop.transitions.idle
+
+
+
 describe "state_machine event functions", ->
 
     it "should switch state if called (for state transitions)", ->
@@ -224,4 +267,33 @@ describe "state_machine event functions", ->
         sm.state.should.be.equal 'walking'
         sm.stop()
         sm.state.should.be.equal 'idle'
+
+
+
+describe "state transistions", ->
+
+    it "could have an optional if: callback", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            @freezed = no
+
+            state.initial "idle"
+            state "walking"
+
+            event "go", ->
+                transition.on "idle", to: "walking", if: -> not @freezed
+
+            event "stop", ->
+                transition.on "walking", to: "idle", if: -> not @freezed
+
+        sm.state.should.be.equal 'idle'
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        sm.stop()
+        sm.state.should.be.equal 'idle'
+        sm.freezed = yes
+        sm.go()
+        sm.state.should.be.equal 'idle'
+
 

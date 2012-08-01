@@ -48,7 +48,11 @@ state_machine = (stateAttrName, options, fn) ->
 
         event_fn = obj[event] or= ->
             trans = event_fn.transitions[obj[stateAttrName]]
-            set_new_state trans.to if trans?
+            if trans?
+                perform_switch = yes
+                if typeof trans.if is 'function'
+                    perform_switch = trans.if.call obj
+                set_new_state trans.to if perform_switch
 
         if typeof callback is 'function'
             current_event = event
@@ -60,16 +64,31 @@ state_machine = (stateAttrName, options, fn) ->
 
     # transition helper function
     #
-    create_event_transitions = (stateTransitionMap) ->
+    create_state_trans_def = (onState, toState, ifCallback) ->
+        trans_def = on: onState, to: toState
+        trans_def.if = ifCallback if typeof ifCallback is 'function'
+        return trans_def
+
+    current_state_transitions = ->
         event_func = obj[current_event]
-        trans_map = event_func.transitions or= {}
+        event_func.transitions or= {}
+
+    create_state_transitions = (stateTransitionMap) ->
+        trans_map = current_state_transitions()
         for onState, toState of stateTransitionMap
-            trans_map[onState] = on: onState, to: toState
+            trans_map[onState] = create_state_trans_def onState, toState
 
     transition_builder = (args...) ->
         # inside event definition?
         if current_event?
-            create_event_transitions args[0] if typeof args[0] is 'object'
+            if typeof args[0] is 'object' and args.length is 1
+                create_state_transitions args[0]
+
+    transition_builder.on = (onState, options = {}) ->
+        # inside event definition?
+        if current_event?
+            trans_map = current_state_transitions()
+            trans_map[onState] = create_state_trans_def onState, options.to, options.if
 
     transition_builder.type = 'coffee_state_machine.TransitionHelperFunction'
 
