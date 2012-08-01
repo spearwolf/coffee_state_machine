@@ -23,15 +23,21 @@ state_machine = (stateAttrName, options, fn) ->
     create_state = (state, parent) ->
         state_def = all_states[state] or= state: state
         state_def.parent = parent if parent?
+        return state_def
 
-    state_builder = (state, options = {}) ->
-        create_state state, options.parent
+    state_builder = (state, options= {}, fn= undefined) ->
+        [fn, options] = [options, {}] if typeof options is 'function'
+        state_def = create_state state, options.parent
+        state_def.properties = fn() if typeof fn is 'function'
         create_state options.parent if options.parent?
 
     state_builder.type = 'coffee_state_machine.StateHelperFunction'
     state_builder.initial = (initialState) -> obj[stateAttrName] = initialState
 
-    obj.is_valid_state = (state) -> all_states[state]?
+    obj.is_valid_state = (state) -> all_states[state]? and all_states[state].state is state
+
+    set_new_state = (nextState) ->
+        obj[stateAttrName] = nextState
 
 
     # event helper function
@@ -41,7 +47,8 @@ state_machine = (stateAttrName, options, fn) ->
     event_builder = (event, callback) ->
 
         event_fn = obj[event] or= ->
-            # TODO go through transisitions
+            trans = event_fn.transitions[obj[stateAttrName]]
+            set_new_state trans.to if trans?
 
         if typeof callback is 'function'
             current_event = event
@@ -53,8 +60,16 @@ state_machine = (stateAttrName, options, fn) ->
 
     # transition helper function
     #
+    create_event_transitions = (stateTransitionMap) ->
+        event_func = obj[current_event]
+        trans_map = event_func.transitions or= {}
+        for onState, toState of stateTransitionMap
+            trans_map[onState] = on: onState, to: toState
+
     transition_builder = (args...) ->
-        # TODO create transisitions
+        # inside event definition?
+        if current_event?
+            create_event_transitions args[0] if typeof args[0] is 'object'
 
     transition_builder.type = 'coffee_state_machine.TransitionHelperFunction'
 

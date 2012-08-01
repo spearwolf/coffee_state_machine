@@ -90,7 +90,7 @@ describe "state_machine", ->
         transition_func.type.should.be.equal 'coffee_state_machine.TransitionHelperFunction'
 
 
-    it "should implicit register state from option 'initial'", ->
+    it "should implicit register state for initial state defined by option 'initial'", ->
 
         sm = state_machine "state", initial: "idle", ->
 
@@ -169,4 +169,59 @@ describe "event helper function", ->
         sm.start.should.be.a "function"
         sm.stop.should.be.a "function"
 
+
+
+describe "transition helper function", ->
+
+    it "should create state transition definition for each key if called with an object as only argument", ->
+
+        sm = state_machine "state", initial: 'idle', (state, event, transition) ->
+
+            state "running"
+
+            event "start", -> transition idle: "running"
+
+            event "stop", -> transition running: "idle"
+
+        sm.start.should.be.a 'function'
+        sm.start.transitions.should.be.a 'object'
+        sm.start.transitions.idle.should.be.a 'object'
+        sm.start.transitions.idle.on.should.be.equal 'idle'
+        sm.start.transitions.idle.to.should.be.equal 'running'
+        should.not.exist sm.start.transitions.running
+
+        sm.stop.should.be.a 'function'
+        sm.stop.transitions.should.be.a 'object'
+        sm.stop.transitions.running.should.be.a 'object'
+        sm.stop.transitions.running.on.should.be.equal 'running'
+        sm.stop.transitions.running.to.should.be.equal 'idle'
+        should.not.exist sm.stop.transitions.idle
+
+
+describe "state_machine event functions", ->
+
+    it "should switch state if called (for state transitions)", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            state.initial "idle"
+            state "running"
+            state "walking"
+
+            event "go", -> transition idle: "walking", walking: "running"
+
+            event "stop", -> transition running: "idle", walking: "idle"
+
+
+        sm.state.should.be.equal 'idle'
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        sm.go()
+        sm.state.should.be.equal 'running'
+        sm.stop()
+        sm.state.should.be.equal 'idle'
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        sm.stop()
+        sm.state.should.be.equal 'idle'
 
