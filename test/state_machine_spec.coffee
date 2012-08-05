@@ -297,3 +297,44 @@ describe "state transistions", ->
         sm.state.should.be.equal 'idle'
 
 
+
+describe "switching states", ->
+
+    it "should set properties and methods from state definition", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            @speed = 0
+            @getSpeedPlusOne = -> @speed + 1
+
+            state.initial "idle"
+
+            state "running", ->
+                speed: 10
+                getSpeedPlusOne: -> @speed + 4
+
+            state "walking", ->
+                speed: 5
+                getSpeedPlusOne: -> @speed + 2
+
+            event "go", -> transition idle: "walking", walking: "running"
+
+            event "stop", -> transition running: "idle", walking: "idle"
+
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+        sm.getSpeedPlusOne().should.be.equal 1
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        sm.speed.should.be.equal 5
+        sm.getSpeedPlusOne().should.be.equal 7
+        sm.go()
+        sm.state.should.be.equal 'running'
+        sm.speed.should.be.equal 10
+        sm.getSpeedPlusOne().should.be.equal 14
+        sm.stop()
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+        sm.getSpeedPlusOne().should.be.equal 1
+
+
