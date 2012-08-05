@@ -25,14 +25,17 @@ state_machine = (stateAttrName, options, fn) ->
         state_def.parent = parent if parent?
         return state_def
 
-    state_builder = (state, options= {}, fn= undefined) ->
+    state_builder = (state, options= {}, fn) ->
         [fn, options] = [options, {}] if typeof options is 'function'
         state_def = create_state state, options.parent
         state_def.properties = fn.call obj if typeof fn is 'function'
         create_state options.parent if options.parent?
 
+    state_builder.initial = (initialState, options= {}, fn) ->
+        state_builder initialState, options, fn
+        obj[stateAttrName] = initialState
+
     state_builder.type = 'coffee_state_machine.StateHelperFunction'
-    state_builder.initial = (initialState) -> obj[stateAttrName] = initialState
 
     obj.is_valid_state = (state) -> all_states[state]? and all_states[state].state is state
 
@@ -42,7 +45,7 @@ state_machine = (stateAttrName, options, fn) ->
         obj[stateAttrName] = nextState
         # restore previously backuped properties
         obj[k] = v for own k, v of origProperties
-        # use properties and methods from new state
+        # set properties and methods from new state
         for own k, v of all_states[nextState].properties
             [origProperties[k], obj[k]] = [obj[k], v]
 
@@ -110,6 +113,7 @@ state_machine = (stateAttrName, options, fn) ->
     state_builder obj[stateAttrName]
 
     #obj.all_states = -> all_states
+    set_new_state obj[stateAttrName]
 
     return obj
 

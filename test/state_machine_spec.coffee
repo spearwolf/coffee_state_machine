@@ -305,9 +305,9 @@ describe "switching states", ->
         sm = state_machine "state", (state, event, transition) ->
 
             @speed = 0
-            @getSpeedPlusOne = -> @speed + 1
 
-            state.initial "idle"
+            state.initial "idle", ->
+                getSpeedPlusOne: -> @speed + 1
 
             state "running", ->
                 speed: 10
@@ -320,6 +320,7 @@ describe "switching states", ->
             event "go", -> transition idle: "walking", walking: "running"
 
             event "stop", -> transition running: "idle", walking: "idle"
+
 
         sm.state.should.be.equal 'idle'
         sm.speed.should.be.equal 0
