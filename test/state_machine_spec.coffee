@@ -339,7 +339,7 @@ describe "switching states", ->
         sm.getSpeedPlusOne().should.be.equal 1
 
 
-    it "should invoke enter callbacks defined by state.enter", ->
+    it "should invoke enter hooks defined by state.enter", ->
 
         is_walking = no
         is_running = no
@@ -372,15 +372,19 @@ describe "switching states", ->
         is_running.should.be.ok
 
 
-    it "should invoke exit callbacks defined by state.exit", ->
+    it "should invoke exit hooks defined by state.exit", ->
 
         is_walking = no
         on_exit_walking = -> is_walking = no
 
         sm = state_machine "state", (state, event, transition) ->
 
+            @go_count = 0
+
             state.enter "walking", -> is_walking = yes
             state.exit "walking", do: on_exit_walking
+
+            state.enter ["walking", "running"], -> @go_count += 1
 
             state.initial "idle"
             state "running"
@@ -392,10 +396,15 @@ describe "switching states", ->
 
         sm.state.should.be.equal 'idle'
         is_walking.should.be.not.ok
+        sm.go_count.should.be.equal 0
         sm.go()
         sm.state.should.be.equal 'walking'
         is_walking.should.be.ok
+        sm.go_count.should.be.equal 1
         sm.go()
         sm.state.should.be.equal 'running'
         is_walking.should.be.not.ok
+        sm.go_count.should.be.equal 2
+
+
 

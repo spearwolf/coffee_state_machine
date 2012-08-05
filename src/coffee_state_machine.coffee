@@ -19,7 +19,7 @@ state_machine = (stateAttrName, options, fn) ->
     # state helper function
     #
     all_states = {}
-    state_callbacks = {}
+    state_hooks = {}
 
     create_state = (state, parent) ->
         state_def = all_states[state] or= state: state
@@ -42,15 +42,19 @@ state_machine = (stateAttrName, options, fn) ->
 
     state_builder.enter = (onEnterState, options= {}, fn) ->
         fn = if typeof options is 'function' then options else options.do
-        state_cb_def = state_callbacks[onEnterState] or= {}
-        state_cb_def.enter or= []
-        state_cb_def.enter.push fn
+        onEnterState = [onEnterState] if typeof onEnterState is 'string'
+        for state in onEnterState
+            state_cb_def = state_hooks[state] or= {}
+            state_cb_def.enter or= []
+            state_cb_def.enter.push fn
 
     state_builder.exit = (onExitState, options= {}, fn) ->
         fn = if typeof options is 'function' then options else options.do
-        state_cb_def = state_callbacks[onExitState] or= {}
-        state_cb_def.exit or= []
-        state_cb_def.exit.push fn
+        onExitState = [onExitState] if typeof onExitState is 'string'
+        for state in onExitState
+            state_cb_def = state_hooks[state] or= {}
+            state_cb_def.exit or= []
+            state_cb_def.exit.push fn
 
     origProperties = {}
 
@@ -61,11 +65,12 @@ state_machine = (stateAttrName, options, fn) ->
         # set properties and methods from new state
         for own k, v of all_states[nextState].properties
             [origProperties[k], obj[k]] = [obj[k], v]
-        # invoke state callbacks
-        if oldState?
-            on_exit = state_callbacks[oldState]?.exit or []
+        # invoke state hooks
+        # XXX parents?
+        if oldState? and nextState isnt oldState
+            on_exit = state_hooks[oldState]?.exit or []
             fn.call obj for fn in on_exit
-        on_enter = state_callbacks[nextState]?.enter or []
+        on_enter = state_hooks[nextState]?.enter or []
         fn.call obj for fn in on_enter
 
 
