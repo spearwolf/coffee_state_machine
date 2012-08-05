@@ -19,6 +19,7 @@ state_machine = (stateAttrName, options, fn) ->
     # state helper function
     #
     all_states = {}
+    state_callbacks = {}
 
     create_state = (state, parent) ->
         state_def = all_states[state] or= state: state
@@ -39,15 +40,33 @@ state_machine = (stateAttrName, options, fn) ->
 
     obj.is_valid_state = (state) -> all_states[state]? and all_states[state].state is state
 
+    state_builder.enter = (onEnterState, options= {}, fn) ->
+        fn = if typeof options is 'function' then options else options.do
+        state_cb_def = state_callbacks[onEnterState] or= {}
+        state_cb_def.enter or= []
+        state_cb_def.enter.push fn
+
+    state_builder.exit = (onExitState, options= {}, fn) ->
+        fn = if typeof options is 'function' then options else options.do
+        state_cb_def = state_callbacks[onExitState] or= {}
+        state_cb_def.exit or= []
+        state_cb_def.exit.push fn
+
     origProperties = {}
 
-    set_new_state = (nextState) ->
+    set_new_state = (nextState, oldState= obj[stateAttrName]) ->
         obj[stateAttrName] = nextState
         # restore previously backuped properties
         obj[k] = v for own k, v of origProperties
         # set properties and methods from new state
         for own k, v of all_states[nextState].properties
             [origProperties[k], obj[k]] = [obj[k], v]
+        # invoke state callbacks
+        if oldState?
+            on_exit = state_callbacks[oldState]?.exit or []
+            fn.call obj for fn in on_exit
+        on_enter = state_callbacks[nextState]?.enter or []
+        fn.call obj for fn in on_enter
 
 
     # event helper function
@@ -113,7 +132,7 @@ state_machine = (stateAttrName, options, fn) ->
     state_builder obj[stateAttrName]
 
     #obj.all_states = -> all_states
-    set_new_state obj[stateAttrName]
+    set_new_state obj[stateAttrName], null
 
     return obj
 

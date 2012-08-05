@@ -339,3 +339,63 @@ describe "switching states", ->
         sm.getSpeedPlusOne().should.be.equal 1
 
 
+    it "should invoke enter callbacks defined by state.enter", ->
+
+        is_walking = no
+        is_running = no
+
+        on_enter_running = -> is_running = yes
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            state.initial "idle"
+            state "running"
+            state "walking"
+
+            state.enter "walking", -> is_walking = yes
+            state.enter "running", do: on_enter_running
+
+            event "go", -> transition idle: "walking", walking: "running"
+
+            event "stop", -> transition running: "idle", walking: "idle"
+
+
+        sm.state.should.be.equal 'idle'
+        is_walking.should.be.not.ok
+        is_running.should.be.not.ok
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        is_walking.should.be.ok
+        is_running.should.be.not.ok
+        sm.go()
+        sm.state.should.be.equal 'running'
+        is_running.should.be.ok
+
+
+    it "should invoke exit callbacks defined by state.exit", ->
+
+        is_walking = no
+        on_exit_walking = -> is_walking = no
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            state.enter "walking", -> is_walking = yes
+            state.exit "walking", do: on_exit_walking
+
+            state.initial "idle"
+            state "running"
+            state "walking"
+
+            event "go", -> transition idle: "walking", walking: "running"
+            event "stop", -> transition running: "idle", walking: "idle"
+
+
+        sm.state.should.be.equal 'idle'
+        is_walking.should.be.not.ok
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        is_walking.should.be.ok
+        sm.go()
+        sm.state.should.be.equal 'running'
+        is_walking.should.be.not.ok
+
