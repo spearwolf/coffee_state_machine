@@ -1,6 +1,6 @@
 # coffee_state_machine [![Build Status](https://secure.travis-ci.org/spearwolf/coffee_state_machine.png "Build Status")](http://travis-ci.org/spearwolf/coffee_state_machine)
 
-a _finite state machine_ made in and for coffeescript (javascript).
+a _finite state machine_ made in and for [CoffeeScript](http://coffeescript.org/) (javascript).
 
 _please note that this software is still at an_ __experimental stage__.
 
@@ -14,10 +14,6 @@ _please note that this software is still at an_ __experimental stage__.
 
 *  flexible DSL (based around _states_, _events_ and _transitions_) to define state machines
 
-*  very high code-coverage using the mocha framework
+*  very high code-coverage using the [mocha](http://visionmedia.github.com/mocha/) test framework
 
-*  written in 100% CoffeeScript
-
-
-
-created 2012 by Wolfger Schramm <wolfger@spearwolf.de>
+*  written in 100% [CoffeeScript](http://coffeescript.org/)
