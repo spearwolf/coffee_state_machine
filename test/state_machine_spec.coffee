@@ -383,7 +383,7 @@ describe "switching states", ->
             @inc_go_count = -> @go_count += 1
 
             state.enter "walking", -> is_walking = yes
-            state.enter ["walking", "running"], do: @inc_go_count
+            state.enter "walking", "running", do: @inc_go_count
 
             state.initial "idle"
             state "running"

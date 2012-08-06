@@ -49,12 +49,12 @@ state_machine = (stateAttrName, options, fn) ->
 
     obj.is_valid_state = (state) -> all_states[state]? and all_states[state].state is state
 
-    state_builder.enter = (onEnterState, options= {}, fn) ->
-        fn = if typeof options is 'function' then options else options.do
+    state_builder.enter = (onEnterState..., options) ->
+        fn = if typeof options is 'function' then options else options?.do
         add_state_hooks "enter", onEnterState, fn
 
-    state_builder.exit = (onExitState, options= {}, fn) ->
-        fn = if typeof options is 'function' then options else options.do
+    state_builder.exit = (onExitState..., options) ->
+        fn = if typeof options is 'function' then options else options?.do
         add_state_hooks "exit", onExitState, fn
 
     origProperties = {}
