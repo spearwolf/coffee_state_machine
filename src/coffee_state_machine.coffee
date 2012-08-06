@@ -26,11 +26,20 @@ state_machine = (stateAttrName, options, fn) ->
         state_def.parent = parent if parent?
         return state_def
 
+    add_state_hooks = (hook, states, fn) ->
+        states = [states] if typeof states is 'string'
+        for state in states
+            state_cb_def = state_hooks[state] or= {}
+            state_cb_def[hook] or= []
+            state_cb_def[hook].push fn
+
     state_builder = (state, options= {}, fn) ->
         [fn, options] = [options, {}] if typeof options is 'function'
         state_def = create_state state, options.parent
         state_def.properties = fn.call obj if typeof fn is 'function'
         create_state options.parent if options.parent?
+        add_state_hooks "enter", state, options.enter if options.enter?
+        add_state_hooks "exit", state, options.exit if options.exit?
 
     state_builder.initial = (initialState, options= {}, fn) ->
         state_builder initialState, options, fn
@@ -42,19 +51,11 @@ state_machine = (stateAttrName, options, fn) ->
 
     state_builder.enter = (onEnterState, options= {}, fn) ->
         fn = if typeof options is 'function' then options else options.do
-        onEnterState = [onEnterState] if typeof onEnterState is 'string'
-        for state in onEnterState
-            state_cb_def = state_hooks[state] or= {}
-            state_cb_def.enter or= []
-            state_cb_def.enter.push fn
+        add_state_hooks "enter", onEnterState, fn
 
     state_builder.exit = (onExitState, options= {}, fn) ->
         fn = if typeof options is 'function' then options else options.do
-        onExitState = [onExitState] if typeof onExitState is 'string'
-        for state in onExitState
-            state_cb_def = state_hooks[state] or= {}
-            state_cb_def.exit or= []
-            state_cb_def.exit.push fn
+        add_state_hooks "exit", onExitState, fn
 
     origProperties = {}
 

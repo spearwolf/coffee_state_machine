@@ -380,15 +380,14 @@ describe "switching states", ->
         sm = state_machine "state", (state, event, transition) ->
 
             @go_count = 0
+            @inc_go_count = -> @go_count += 1
 
             state.enter "walking", -> is_walking = yes
-            state.exit "walking", do: on_exit_walking
-
-            state.enter ["walking", "running"], -> @go_count += 1
+            state.enter ["walking", "running"], do: @inc_go_count
 
             state.initial "idle"
             state "running"
-            state "walking"
+            state "walking", exit: on_exit_walking
 
             event "go", -> transition idle: "walking", walking: "running"
             event "stop", -> transition running: "idle", walking: "idle"
