@@ -49,13 +49,13 @@ state_machine = (stateAttrName, options, fn) ->
 
     obj.is_valid_state = (state) -> all_states[state]? and all_states[state].state is state
 
-    state_builder.enter = (onEnterState..., options) ->
-        fn = if typeof options is 'function' then options else options?.do
-        add_state_hooks "enter", onEnterState, fn
+    create_state_hook = (hook) ->
+        (state..., options) ->
+            fn = if typeof options is 'function' then options else options?.do
+            add_state_hooks hook, state, fn
 
-    state_builder.exit = (onExitState..., options) ->
-        fn = if typeof options is 'function' then options else options?.do
-        add_state_hooks "exit", onExitState, fn
+    state_builder.enter = create_state_hook "enter"
+    state_builder.exit = create_state_hook "exit"
 
     origProperties = {}
 
@@ -67,7 +67,7 @@ state_machine = (stateAttrName, options, fn) ->
         for own k, v of all_states[nextState].properties
             [origProperties[k], obj[k]] = [obj[k], v]
         # invoke state hooks
-        # XXX parents?
+        # TODO don't forget the parents!
         if oldState? and nextState isnt oldState
             on_exit = state_hooks[oldState]?.exit or []
             fn.call obj for fn in on_exit
