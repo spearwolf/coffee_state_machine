@@ -343,12 +343,15 @@ describe "switching states", ->
 
         is_walking = no
         is_running = no
+        is_initialized_idle = no
 
         on_enter_running = -> is_running = yes
+        on_initial_enter_idle = -> is_initialized_idle = yes
+
 
         sm = state_machine "state", (state, event, transition) ->
 
-            state.initial "idle"
+            state.initial "idle", enter: on_initial_enter_idle
             state "running"
             state "walking"
 
@@ -361,6 +364,7 @@ describe "switching states", ->
 
 
         sm.state.should.be.equal 'idle'
+        is_initialized_idle.should.be.ok
         is_walking.should.be.not.ok
         is_running.should.be.not.ok
         sm.go()

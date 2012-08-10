@@ -59,6 +59,10 @@ state_machine = (stateAttrName, options, fn) ->
 
     origProperties = {}
 
+    call_state_hooks = (state, hook) ->
+        hook_fns = state_hooks[state]?[hook] or []
+        fn.call obj for fn in hook_fns
+
     set_new_state = (nextState, oldState= obj[stateAttrName]) ->
         obj[stateAttrName] = nextState
         # restore previously backuped properties
@@ -66,13 +70,12 @@ state_machine = (stateAttrName, options, fn) ->
         # set properties and methods from new state
         for own k, v of all_states[nextState].properties
             [origProperties[k], obj[k]] = [obj[k], v]
-        # invoke state hooks
         # TODO don't forget the parents!
+        # invoke state hooks
         if oldState? and nextState isnt oldState
-            on_exit = state_hooks[oldState]?.exit or []
-            fn.call obj for fn in on_exit
-        on_enter = state_hooks[nextState]?.enter or []
-        fn.call obj for fn in on_enter
+            call_state_hooks oldState, "exit"
+        if oldState is false or nextState isnt oldState
+            call_state_hooks nextState, "enter"
 
 
     # event helper function
@@ -138,7 +141,7 @@ state_machine = (stateAttrName, options, fn) ->
     state_builder obj[stateAttrName]
 
     #obj.all_states = -> all_states
-    set_new_state obj[stateAttrName], null
+    set_new_state obj[stateAttrName], false
 
     return obj
 
