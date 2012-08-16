@@ -60,6 +60,8 @@ state_machine = (stateAttrName, options, fn) ->
     origProperties = {}
 
     call_state_hooks = (state, hook) ->
+        parent_state = all_states[state]?.parent
+        call_state_hooks parent_state, hook if parent_state?
         hook_fns = state_hooks[state]?[hook] or []
         fn.call obj for fn in hook_fns
 
