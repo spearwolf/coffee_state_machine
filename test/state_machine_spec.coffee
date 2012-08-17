@@ -423,14 +423,21 @@ describe "switching states", ->
             @motion_count = 0
             @inc_motion_count = -> @motion_count += 2
 
+            @foobar = 7
+
             state.enter "walking", -> is_walking = yes
             state.enter "walking", "running", do: @inc_go_count
 
-            state.initial "idle"
-            state "running", parent: "motion"
+            state.initial "idle", ->
+                foobar: 13
+
+            state "running", parent: "motion", ->
+                foobar: 14
+
             state "walking", parent: "motion", exit: on_exit_walking
 
-            state "motion", enter: @inc_motion_count
+            state "motion", enter: @inc_motion_count, ->
+                foobar: 23
 
             event "go", -> transition idle: "walking", walking: "running"
             event "stop", -> transition running: "idle", walking: "idle"
@@ -440,16 +447,19 @@ describe "switching states", ->
         is_walking.should.be.not.ok
         sm.go_count.should.be.equal 0
         sm.motion_count.should.be.equal 0
+        sm.foobar.should.be.equal 13
         sm.go()
         sm.state.should.be.equal 'walking'
         is_walking.should.be.ok
         sm.go_count.should.be.equal 1
         sm.motion_count.should.be.equal 2
+        sm.foobar.should.be.equal 23
         sm.go()
         sm.state.should.be.equal 'running'
         is_walking.should.be.not.ok
         sm.go_count.should.be.equal 2
-        sm.motion_count.should.be.equal 4
+        sm.motion_count.should.be.equal 4  # TODO no! should be 2 here
+        sm.foobar.should.be.equal 14
 
 
 
@@ -457,7 +467,7 @@ describe "switching states", ->
 
 # TODO
 #
-# parent from parent from paren stage changes --> enter/exit hooks
+# parent from parent from parent stage changes --> enter/exit hooks
 #
 # transition.all :except => [], :only => []
 # transition.same()

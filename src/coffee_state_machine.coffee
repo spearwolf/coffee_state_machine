@@ -59,20 +59,47 @@ state_machine = (stateAttrName, options, fn) ->
 
     origProperties = {}
 
+    get_parent_state = (state) -> all_states[state]?.parent
+
+    get_parent_states = (state) -> 
+        if state_def = all_states[state]?
+            state_def.parents or= (state while state = get_parent_state state).reverse()
+
+    obj.get_parent_states = (state) -> get_parent_states state
+
+    foreach_parent_states = (state, fn) ->
+        fn(state) for state in get_parent_states(state)
+        return
+
     call_state_hooks = (state, hook) ->
-        parent_state = all_states[state]?.parent
+        parent_state = get_parent_state state
         call_state_hooks parent_state, hook if parent_state?
         hook_fns = state_hooks[state]?[hook] or []
         fn.call obj for fn in hook_fns
 
+    extend_obj_with = (props) ->
+        [origProperties[k], obj[k]] = [obj[k], v] for own k, v of props
+        return
+
+    extend_with_own = (props, o) ->
+        o[k] = v for own k, v of props
+        return
+
     set_new_state = (nextState, oldState= obj[stateAttrName]) ->
         obj[stateAttrName] = nextState
+
         # restore previously backuped properties
         obj[k] = v for own k, v of origProperties
-        # set properties and methods from new state
-        for own k, v of all_states[nextState].properties
-            [origProperties[k], obj[k]] = [obj[k], v]
+
+        # set properties and methods from new state (and parents..)
+        new_props = {}
+        foreach_parent_states nextState, (state) ->
+            extend_with_own all_states[state].properties, new_props
+        extend_with_own all_states[nextState].properties, new_props
+        extend_obj_with new_props
+
         # TODO don't forget the parents!
+
         # invoke state hooks
         if oldState? and nextState isnt oldState
             call_state_hooks oldState, "exit"
