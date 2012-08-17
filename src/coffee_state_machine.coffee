@@ -119,7 +119,10 @@ state_machine = (stateAttrName, options, fn) ->
                 perform_switch = yes
                 if typeof trans.if is 'function'
                     perform_switch = trans.if.call obj
-                set_new_state trans.to if perform_switch
+                if perform_switch
+                    set_new_state trans.to
+                    return true
+            return false
 
         if typeof callback is 'function'
             current_event = event

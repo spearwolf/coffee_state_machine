@@ -269,6 +269,28 @@ describe "state_machine event functions", ->
         sm.state.should.be.equal 'idle'
 
 
+    it "should return true if state changed, otherwise false", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            state.initial "idle"
+            state "running"
+            state "walking"
+
+            event "go", -> transition idle: "walking"
+
+            event "stop", -> transition running: "idle", walking: "idle"
+
+
+        sm.state.should.be.equal 'idle'
+        sm.go().should.be.equal true
+        sm.state.should.be.equal 'walking'
+        sm.go().should.be.equal false
+        sm.state.should.be.equal 'walking'
+        sm.stop().should.be.equal true
+        sm.state.should.be.equal 'idle'
+
+
 
 describe "state transistions", ->
 
@@ -295,7 +317,6 @@ describe "state transistions", ->
         sm.freezed = yes
         sm.go()
         sm.state.should.be.equal 'idle'
-
 
 
 describe "switching states", ->

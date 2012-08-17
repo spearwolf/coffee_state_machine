@@ -80,6 +80,7 @@ describe "hierarchical parents pyramid example", ->
 
     it "B should has PPABC and PAPB as parents", ->
         sm.get_parent_states("B").should.eql ['PPABC', 'PAPB']
+        sm.get_parent_states("B").should.eql ['PPABC', 'PAPB']
 
     it "C should has PPABC and PC as parents", ->
         sm.get_parent_states("C").should.eql ['PPABC', 'PC']
@@ -120,6 +121,11 @@ describe "hierarchical parents pyramid example", ->
         sm.state.should.be.equal "A"
 
         sm.foo.should.be.equal 1
+
+        sm.go()
+        sm.state.should.be.equal "B"
+
+        sm.foo.should.be.equal 2
 
         # TODO work in progress
 
