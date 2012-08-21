@@ -1,7 +1,29 @@
-should = require 'should'
-state_machine = require("./../lib/coffee_state_machine").state_machine
+should = require "should"
+{state_machine} = require "./../lib/coffee_state_machine"
 
 describe "hierarchical parents pyramid example", ->
+
+    flags = 
+        papb:
+            enter: false, exit: false
+        pc:
+            enter: false, exit: false
+        pd:
+            enter: false, exit: false
+        pe:
+            enter: false, exit: false
+        ppabc:
+            enter: false, exit: false
+        ppe:
+            enter: false, exit: false
+
+    switch_on = (state, hook) ->
+        -> flags[state][hook] = true
+
+    switch_all_off = ->
+        for state, flag of flags
+            [flag.enter, flag.exit] = [false, false]
+
 
     sm = state_machine "state", initial: "ZERO", (state, event, transition) ->
 
@@ -18,21 +40,25 @@ describe "hierarchical parents pyramid example", ->
 
         state "F"
 
-        state "PAPB", parent: "PPABC", ->
+        state "PAPB", parent: "PPABC", enter: switch_on("papb", "enter"), exit: switch_on("papb", "exit"), ->
             foo: 2
 
-        state "PC", parent: "PPABC"
+        state "PC", parent: "PPABC", enter: switch_on("pc", "enter"), exit: switch_on("pc", "exit")
 
-        state "PE", parent: "PPE"
+        state "PD", enter: switch_on("pd", "enter"), exit: switch_on("pd", "exit")
 
-        state "PPABC", ->
+        state "PE", parent: "PPE", enter: switch_on("pe", "enter"), exit: switch_on("pe", "exit")
+
+        state "PPE", enter: switch_on("ppe", "enter"), exit: switch_on("ppe", "exit")
+
+        state "PPABC", enter: switch_on("ppabc", "enter"), exit: switch_on("ppabc", "exit"), ->
             foo: 3
 
         state "ZERO", ->
             foo: 0
 
 
-        event "start", -> transition ZERO: "A"
+        event "start", -> transition ZERO: "A", B: "A", C: "A", D: "A", E: "A", F: "A"
 
         event "go", -> transition A: "B", B: "C", C: "D", D: "E", E: "F", F: "A"
 
@@ -112,21 +138,130 @@ describe "hierarchical parents pyramid example", ->
     it "PPE should has no parents", ->
         sm.get_parent_states("PPE").should.eql []
 
-
-    it "properties from parents should be overwritten by properties from childs", ->
-
+    it "at ZERO stage foo should be 0", ->
         sm.foo.should.be.equal 0
 
+    it "ZERO -> A", ->
+        sm.start()
+        sm.state.should.be.equal "A"
+        sm.foo.should.be.equal 1
+
+    it "A -> B", ->
         sm.start()
         sm.state.should.be.equal "A"
 
-        sm.foo.should.be.equal 1
-
+        switch_all_off()
         sm.go()
         sm.state.should.be.equal "B"
 
-        sm.foo.should.be.equal 2
+    it "A -> B foo should be correct", -> sm.foo.should.be.equal 2
+    it "A -> B PAPB:enter should be NOT called", -> flags.papb.enter.should.be.equal false
+    it "A -> B PAPB:exit should be NOT called", -> flags.papb.exit.should.be.equal false
+    it "A -> B PC:enter should be NOT called", -> flags.pc.enter.should.be.equal false
+    it "A -> B PC:exit should be NOT called", -> flags.pc.exit.should.be.equal false
+    it "A -> B PD:enter should be NOT called", -> flags.pd.enter.should.be.equal false
+    it "A -> B PD:exit should be NOT called", -> flags.pd.exit.should.be.equal false
+    it "A -> B PE:enter should be NOT called", -> flags.pe.enter.should.be.equal false
+    it "A -> B PE:exit should be NOT called", -> flags.pe.exit.should.be.equal false
+    it "A -> B PPABC:enter should be NOT called", -> flags.ppabc.enter.should.be.equal false
+    it "A -> B PPABC:exit should be NOT called", -> flags.ppabc.exit.should.be.equal false
+    it "A -> B PPE:enter should be NOT called", -> flags.ppe.enter.should.be.equal false
+    it "A -> B PPE:exit should be NOT called", -> flags.ppe.exit.should.be.equal false
 
-        # TODO work in progress
+    it "B -> C", ->
+        switch_all_off()
+        sm.go()
+        sm.state.should.be.equal "C"
+
+    it "B -> C foo should be correct", -> sm.foo.should.be.equal 3
+    it "B -> C PAPB:enter should be NOT called", -> flags.papb.enter.should.be.equal false
+    it "B -> C PAPB:exit should be called", -> flags.papb.exit.should.be.equal true
+    it "B -> C PC:enter should be called", -> flags.pc.enter.should.be.equal true
+    it "B -> C PC:exit should be NOT called", -> flags.pc.exit.should.be.equal false
+    it "B -> C PD:enter should be NOT called", -> flags.pd.enter.should.be.equal false
+    it "B -> C PD:exit should be NOT called", -> flags.pd.exit.should.be.equal false
+    it "B -> C PE:enter should be NOT called", -> flags.pe.enter.should.be.equal false
+    it "B -> C PE:exit should be NOT called", -> flags.pe.exit.should.be.equal false
+    it "B -> C PPABC:enter should be NOT called", -> flags.ppabc.enter.should.be.equal false
+    it "B -> C PPABC:exit should be NOT called", -> flags.ppabc.exit.should.be.equal false
+    it "B -> C PPE:enter should be NOT called", -> flags.ppe.enter.should.be.equal false
+    it "B -> C PPE:exit should be NOT called", -> flags.ppe.exit.should.be.equal false
+
+    it "C -> D", ->
+        switch_all_off()
+        sm.go()
+        sm.state.should.be.equal "D"
+
+    it "C -> D foo should be correct", -> should.not.exist sm.foo
+    it "C -> D PAPB:enter should be NOT called", -> flags.papb.enter.should.be.equal false
+    it "C -> D PAPB:exit should be NOT called", -> flags.papb.exit.should.be.equal false
+    it "C -> D PC:enter should be NOT called", -> flags.pc.enter.should.be.equal false
+    it "C -> D PC:exit should be called", -> flags.pc.exit.should.be.equal true
+    it "C -> D PD:enter should be called", -> flags.pd.enter.should.be.equal true
+    it "C -> D PD:exit should be NOT called", -> flags.pd.exit.should.be.equal false
+    it "C -> D PE:enter should be NOT called", -> flags.pe.enter.should.be.equal false
+    it "C -> D PE:exit should be NOT called", -> flags.pe.exit.should.be.equal false
+    it "C -> D PPABC:enter should be NOT called", -> flags.ppabc.enter.should.be.equal false
+    it "C -> D PPABC:exit should be called", -> flags.ppabc.exit.should.be.equal true
+    it "C -> D PPE:enter should be NOT called", -> flags.ppe.enter.should.be.equal false
+    it "C -> D PPE:exit should be NOT called", -> flags.ppe.exit.should.be.equal false
+
+    it "D -> E", ->
+        switch_all_off()
+        sm.go()
+        sm.state.should.be.equal "E"
+
+    it "D -> E foo should be correct", -> should.not.exist sm.foo
+    it "D -> E PAPB:enter should be NOT called", -> flags.papb.enter.should.be.equal false
+    it "D -> E PAPB:exit should be NOT called", -> flags.papb.exit.should.be.equal false
+    it "D -> E PC:enter should be NOT called", -> flags.pc.enter.should.be.equal false
+    it "D -> E PC:exit should be NOT called", -> flags.pc.exit.should.be.equal false
+    it "D -> E PD:enter should be NOT called", -> flags.pd.enter.should.be.equal false
+    it "D -> E PD:exit should be called", -> flags.pd.exit.should.be.equal true
+    it "D -> E PE:enter should be called", -> flags.pe.enter.should.be.equal true
+    it "D -> E PE:exit should be NOT called", -> flags.pe.exit.should.be.equal false
+    it "D -> E PPABC:enter should be NOT called", -> flags.ppabc.enter.should.be.equal false
+    it "D -> E PPABC:exit should be NOT called", -> flags.ppabc.exit.should.be.equal false
+    it "D -> E PPE:enter should be called", -> flags.ppe.enter.should.be.equal true
+    it "D -> E PPE:exit should be NOT called", -> flags.ppe.exit.should.be.equal false
+
+    it "E -> F", ->
+        switch_all_off()
+        sm.go()
+        sm.state.should.be.equal "F"
+
+    it "E -> F foo should be correct", -> should.not.exist sm.foo
+    it "E -> F PAPB:enter should be NOT called", -> flags.papb.enter.should.be.equal false
+    it "E -> F PAPB:exit should be NOT called", -> flags.papb.exit.should.be.equal false
+    it "E -> F PC:enter should be NOT called", -> flags.pc.enter.should.be.equal false
+    it "E -> F PC:exit should be NOT called", -> flags.pc.exit.should.be.equal false
+    it "E -> F PD:enter should be NOT called", -> flags.pd.enter.should.be.equal false
+    it "E -> F PD:exit should be NOT called", -> flags.pd.exit.should.be.equal false
+    it "E -> F PE:enter should be NOT called", -> flags.pe.enter.should.be.equal false
+    it "E -> F PE:exit should be called", -> flags.pe.exit.should.be.equal true
+    it "E -> F PPABC:enter should be NOT called", -> flags.ppabc.enter.should.be.equal false
+    it "E -> F PPABC:exit should be NOT called", -> flags.ppabc.exit.should.be.equal false
+    it "E -> F PPE:enter should be NOT called", -> flags.ppe.enter.should.be.equal false
+    it "E -> F PPE:exit should be called", -> flags.ppe.exit.should.be.equal true
+
+    it "F -> A", ->
+        switch_all_off()
+        sm.go()
+        sm.state.should.be.equal "A"
+
+    it "F -> A foo should be correct", -> sm.foo.should.be.equal 1
+    it "F -> A PAPB:enter should be called", -> flags.papb.enter.should.be.equal true
+    it "F -> A PAPB:exit should be NOT called", -> flags.papb.exit.should.be.equal false
+    it "F -> A PC:enter should be NOT called", -> flags.pc.enter.should.be.equal false
+    it "F -> A PC:exit should be NOT called", -> flags.pc.exit.should.be.equal false
+    it "F -> A PD:enter should be NOT called", -> flags.pd.enter.should.be.equal false
+    it "F -> A PD:exit should be NOT called", -> flags.pd.exit.should.be.equal false
+    it "F -> A PE:enter should be NOT called", -> flags.pe.enter.should.be.equal false
+    it "F -> A PE:exit should be NOT called", -> flags.pe.exit.should.be.equal false
+    it "F -> A PPABC:enter should be called", -> flags.ppabc.enter.should.be.equal true
+    it "F -> A PPABC:exit should be NOT called", -> flags.ppabc.exit.should.be.equal false
+    it "F -> A PPE:enter should be NOT called", -> flags.ppe.enter.should.be.equal false
+    it "F -> A PPE:exit should be NOT called", -> flags.ppe.exit.should.be.equal false
+
 
 

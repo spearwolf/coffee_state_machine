@@ -64,6 +64,8 @@ state_machine = (stateAttrName, options, fn) ->
     get_parent_states = (state) -> 
         if state_def = all_states[state]?
             state_def.parents or= (state while state = get_parent_state state).reverse()
+        else
+            []
 
     obj.get_parent_states = (state) -> get_parent_states state
 
@@ -72,8 +74,8 @@ state_machine = (stateAttrName, options, fn) ->
         return
 
     call_state_hooks = (state, hook) ->
-        parent_state = get_parent_state state
-        call_state_hooks parent_state, hook if parent_state?
+        #parent_state = get_parent_state state
+        #call_state_hooks parent_state, hook if parent_state?
         hook_fns = state_hooks[state]?[hook] or []
         fn.call obj for fn in hook_fns
 
@@ -98,13 +100,18 @@ state_machine = (stateAttrName, options, fn) ->
         extend_with_own all_states[nextState].properties, new_props
         extend_obj_with new_props
 
-        # TODO don't forget the parents!
+        # call enter/exit hooks
+        parents =
+            old: get_parent_states oldState
+            next: get_parent_states nextState
 
-        # invoke state hooks
-        if oldState? and nextState isnt oldState
-            call_state_hooks oldState, "exit"
-        if oldState is false or nextState isnt oldState
-            call_state_hooks nextState, "enter"
+        parents.exit = (state for state in parents.old when parents.next.indexOf(state) is -1)
+        parents.enter = (state for state in parents.next when parents.old.indexOf(state) is -1)
+
+        call_state_hooks state, "exit" for state in parents.exit when state isnt nextState
+        call_state_hooks oldState, "exit" if (oldState? and nextState isnt oldState) and parents.next.indexOf(oldState) is -1
+        call_state_hooks state, "enter" for state in parents.enter when state isnt oldState
+        call_state_hooks nextState, "enter" if (oldState is false or nextState isnt oldState) and parents.old.indexOf(nextState) is -1
 
 
     # event helper function

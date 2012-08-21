@@ -1,5 +1,5 @@
-should = require 'should'
-state_machine = require("./../lib/coffee_state_machine").state_machine
+should = require "should"
+{state_machine} = require "./../lib/coffee_state_machine"
 
 describe "state_machine", ->
 
@@ -479,7 +479,7 @@ describe "switching states", ->
         sm.state.should.be.equal 'running'
         is_walking.should.be.not.ok
         sm.go_count.should.be.equal 2
-        sm.motion_count.should.be.equal 4  # TODO no! should be 2 here
+        sm.motion_count.should.be.equal 2
         sm.foobar.should.be.equal 14
 
 
@@ -487,8 +487,6 @@ describe "switching states", ->
 
 
 # TODO
-#
-# parent from parent from parent stage changes --> enter/exit hooks
 #
 # transition.all :except => [], :only => []
 # transition.same()
