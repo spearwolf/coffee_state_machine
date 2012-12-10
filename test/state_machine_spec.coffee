@@ -400,7 +400,6 @@ describe "switching states", ->
     it "should invoke exit hooks defined by state.exit", ->
 
         is_walking = no
-        on_exit_walking = -> is_walking = no
 
         sm = state_machine "state", (state, event, transition) ->
 
@@ -412,7 +411,7 @@ describe "switching states", ->
 
             state.initial "idle"
             state "running"
-            state "walking", exit: on_exit_walking
+            state "walking", exit: -> is_walking = no if @state is 'walking'
 
             event "go", -> transition idle: "walking", walking: "running"
             event "stop", -> transition running: "idle", walking: "idle"

@@ -61,7 +61,7 @@ state_machine = (stateAttrName, options, fn) ->
 
     get_parent_state = (state) -> all_states[state]?.parent
 
-    get_parent_states = (state) -> 
+    get_parent_states = (state) ->
         if state_def = all_states[state]?
             state_def.parents or= (state while state = get_parent_state state).reverse()
         else
@@ -74,8 +74,6 @@ state_machine = (stateAttrName, options, fn) ->
         return
 
     call_state_hooks = (state, hook) ->
-        #parent_state = get_parent_state state
-        #call_state_hooks parent_state, hook if parent_state?
         hook_fns = state_hooks[state]?[hook] or []
         fn.call obj for fn in hook_fns
 
@@ -88,6 +86,18 @@ state_machine = (stateAttrName, options, fn) ->
         return
 
     set_new_state = (nextState, oldState= obj[stateAttrName]) ->
+        parents =
+            old: get_parent_states oldState
+            next: get_parent_states nextState
+
+        parents.exit = (state for state in parents.old when parents.next.indexOf(state) is -1)
+        parents.enter = (state for state in parents.next when parents.old.indexOf(state) is -1)
+
+        # exit hooks
+        call_state_hooks state, "exit" for state in parents.exit when state isnt nextState
+        call_state_hooks oldState, "exit" if (oldState? and nextState isnt oldState) and parents.next.indexOf(oldState) is -1
+
+        # set new state ..
         obj[stateAttrName] = nextState
 
         # restore previously backuped properties
@@ -100,16 +110,7 @@ state_machine = (stateAttrName, options, fn) ->
         extend_with_own all_states[nextState].properties, new_props
         extend_obj_with new_props
 
-        # call enter/exit hooks
-        parents =
-            old: get_parent_states oldState
-            next: get_parent_states nextState
-
-        parents.exit = (state for state in parents.old when parents.next.indexOf(state) is -1)
-        parents.enter = (state for state in parents.next when parents.old.indexOf(state) is -1)
-
-        call_state_hooks state, "exit" for state in parents.exit when state isnt nextState
-        call_state_hooks oldState, "exit" if (oldState? and nextState isnt oldState) and parents.next.indexOf(oldState) is -1
+        # enter hooks
         call_state_hooks state, "enter" for state in parents.enter when state isnt oldState
         call_state_hooks nextState, "enter" if (oldState is false or nextState isnt oldState) and parents.old.indexOf(nextState) is -1
 
