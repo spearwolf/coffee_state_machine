@@ -213,7 +213,7 @@ describe "transition helper function", ->
                 transition.on "idle", to: "walking"
 
             event "stop", ->
-                transition.on "walking", to: "idle", if: -> not freezed
+                transition.on "walking", to: "idle", unless: -> freezed
 
         sm.go.should.be.a 'function'
         sm.go.transitions.should.be.a 'object'
@@ -236,7 +236,7 @@ describe "transition helper function", ->
         sm.stop.transitions.walking.should.be.a 'object'
         sm.stop.transitions.walking.on.should.be.equal 'walking'
         sm.stop.transitions.walking.to.should.be.equal 'idle'
-        sm.stop.transitions.walking.if.should.be.a 'function'
+        sm.stop.transitions.walking.unless.should.be.a 'function'
         should.not.exist sm.stop.transitions.idle
 
 
@@ -319,6 +319,32 @@ describe "state transistions", ->
         sm.state.should.be.equal 'idle'
 
 
+    it "could have an optional unless: callback", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            @freezed = no
+
+            state.initial "idle"
+            state "walking"
+
+            event "go", ->
+                transition.on "idle", to: "walking", unless: -> @freezed
+
+            event "stop", ->
+                transition.on "walking", to: "idle", unless: -> @freezed
+
+        sm.state.should.be.equal 'idle'
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        sm.stop()
+        sm.state.should.be.equal 'idle'
+        sm.freezed = yes
+        sm.go()
+        sm.state.should.be.equal 'idle'
+
+
+
 describe "switching states", ->
 
     it "should set properties and methods from state definition", ->
@@ -340,7 +366,8 @@ describe "switching states", ->
 
             event "go", -> transition idle: "walking", walking: "running"
 
-            event "stop", -> transition running: "idle", walking: "idle"
+            event "stop", -> transition.on ["running", "walking"], to: "idle"
+                # transition running: "idle", walking: "idle"
 
 
         sm.state.should.be.equal 'idle'

@@ -128,8 +128,11 @@ state_machine = (stateAttrName, options, fn) ->
                 if typeof trans.if is 'function'
                     perform_switch = trans.if.call obj
                 if perform_switch
-                    set_new_state trans.to
-                    return true
+                    if typeof trans.unless is 'function'
+                        perform_switch = not trans.unless.call(obj)
+                    if perform_switch
+                        set_new_state trans.to
+                        return true
             return false
 
         if typeof callback is 'function'
@@ -142,9 +145,10 @@ state_machine = (stateAttrName, options, fn) ->
 
     # transition helper function
     #
-    create_state_trans_def = (onState, toState, ifCallback) ->
+    create_state_trans_def = (onState, toState, ifCallback, unlessCallback) ->
         trans_def = on: onState, to: toState
         trans_def.if = ifCallback if typeof ifCallback is 'function'
+        trans_def.unless = unlessCallback if typeof unlessCallback is 'function'
         return trans_def
 
     current_state_transitions = ->
@@ -162,11 +166,13 @@ state_machine = (stateAttrName, options, fn) ->
             if typeof args[0] is 'object' and args.length is 1
                 create_state_transitions args[0]
 
-    transition_builder.on = (onState, options = {}) ->
+    transition_builder.on = (states, options = {}) ->
         # inside event definition?
         if current_event?
             trans_map = current_state_transitions()
-            trans_map[onState] = create_state_trans_def onState, options.to, options.if
+            _states = if typeof states is 'string' then [states] else states
+            for on_state in _states
+                trans_map[on_state] = create_state_trans_def on_state, options.to, options.if, options.unless
 
     transition_builder.type = 'coffee_state_machine.TransitionHelperFunction'
 
