@@ -344,6 +344,60 @@ describe "state transistions", ->
         sm.state.should.be.equal 'idle'
 
 
+    it "could have an optional do: callback (transition hook)", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            @speed = 0
+
+            state.initial "idle"
+            state "walking"
+
+            event "go", ->
+                transition.on "idle", to: "walking", do: -> @speed += 1
+
+            event "stop", ->
+                transition.on "walking", to: "idle", do: -> @speed -= 1
+
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        sm.speed.should.be.equal 1
+        sm.stop()
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+
+
+    it "transition hook should be called with oldState and event fn arguments", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            @speed = 0
+
+            state.initial "idle"
+            state "walking"
+
+            event "go", ->
+                transition.on "idle", to: "walking", do: (oldState, v) ->
+                    oldState.should.be.equal 'idle'
+                    @speed += v
+
+            event "stop", ->
+                transition.on "walking", to: "idle", do: (oldState, v) ->
+                    oldState.should.be.equal 'walking'
+                    @speed -= v
+
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+        sm.go(7)
+        sm.state.should.be.equal 'walking'
+        sm.speed.should.be.equal 7
+        sm.stop(4)
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 3
+
+
 
 describe "switching states", ->
 
@@ -367,7 +421,6 @@ describe "switching states", ->
             event "go", -> transition idle: "walking", walking: "running"
 
             event "stop", -> transition.on ["running", "walking"], to: "idle"
-                # transition running: "idle", walking: "idle"
 
 
         sm.state.should.be.equal 'idle'
