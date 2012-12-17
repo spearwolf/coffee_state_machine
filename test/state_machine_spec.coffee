@@ -186,19 +186,19 @@ describe "transition helper function", ->
         sm.start.should.be.a 'function'
         sm.start.transitions.should.be.a 'object'
         sm.start.transitions.idle.should.be.a 'object'
-        sm.start.transitions.idle.on.should.be.equal 'idle'
+        sm.start.transitions.idle.from.should.be.equal 'idle'
         sm.start.transitions.idle.to.should.be.equal 'running'
         should.not.exist sm.start.transitions.running
 
         sm.stop.should.be.a 'function'
         sm.stop.transitions.should.be.a 'object'
         sm.stop.transitions.running.should.be.a 'object'
-        sm.stop.transitions.running.on.should.be.equal 'running'
+        sm.stop.transitions.running.from.should.be.equal 'running'
         sm.stop.transitions.running.to.should.be.equal 'idle'
         should.not.exist sm.stop.transitions.idle
 
 
-    it "should create conditional state transition definition if defined by transition.on()", ->
+    it "should create conditional state transition definition if defined by transition.from()", ->
 
         freezed = no
         sm = state_machine "state", (state, event, transition) ->
@@ -207,18 +207,18 @@ describe "transition helper function", ->
             state "walking"
 
             event "go", ->
-                transition.on "idle", to: "walking", if: -> not freezed
+                transition.from "idle", to: "walking", if: -> not freezed
 
             event "gogogo", ->
-                transition.on "idle", to: "walking"
+                transition.from "idle", to: "walking"
 
             event "stop", ->
-                transition.on "walking", to: "idle", unless: -> freezed
+                transition.from "walking", to: "idle", unless: -> freezed
 
         sm.go.should.be.a 'function'
         sm.go.transitions.should.be.a 'object'
         sm.go.transitions.idle.should.be.a 'object'
-        sm.go.transitions.idle.on.should.be.equal 'idle'
+        sm.go.transitions.idle.from.should.be.equal 'idle'
         sm.go.transitions.idle.to.should.be.equal 'walking'
         sm.go.transitions.idle.if.should.be.a 'function'
         should.not.exist sm.go.transitions.walking
@@ -226,7 +226,7 @@ describe "transition helper function", ->
         sm.gogogo.should.be.a 'function'
         sm.gogogo.transitions.should.be.a 'object'
         sm.gogogo.transitions.idle.should.be.a 'object'
-        sm.gogogo.transitions.idle.on.should.be.equal 'idle'
+        sm.gogogo.transitions.idle.from.should.be.equal 'idle'
         sm.gogogo.transitions.idle.to.should.be.equal 'walking'
         should.not.exist sm.gogogo.transitions.idle.if
         should.not.exist sm.gogogo.transitions.walking
@@ -234,7 +234,7 @@ describe "transition helper function", ->
         sm.stop.should.be.a 'function'
         sm.stop.transitions.should.be.a 'object'
         sm.stop.transitions.walking.should.be.a 'object'
-        sm.stop.transitions.walking.on.should.be.equal 'walking'
+        sm.stop.transitions.walking.from.should.be.equal 'walking'
         sm.stop.transitions.walking.to.should.be.equal 'idle'
         sm.stop.transitions.walking.unless.should.be.a 'function'
         should.not.exist sm.stop.transitions.idle
@@ -304,10 +304,10 @@ describe "state transistions", ->
             state "walking"
 
             event "go", ->
-                transition.on "idle", to: "walking", if: -> not @freezed
+                transition.from "idle", to: "walking", if: -> not @freezed
 
             event "stop", ->
-                transition.on "walking", to: "idle", if: -> not @freezed
+                transition.from "walking", to: "idle", if: -> not @freezed
 
         sm.state.should.be.equal 'idle'
         sm.go()
@@ -329,10 +329,10 @@ describe "state transistions", ->
             state "walking"
 
             event "go", ->
-                transition.on "idle", to: "walking", unless: -> @freezed
+                transition.from "idle", to: "walking", unless: -> @freezed
 
             event "stop", ->
-                transition.on "walking", to: "idle", unless: -> @freezed
+                transition.from "walking", to: "idle", unless: -> @freezed
 
         sm.state.should.be.equal 'idle'
         sm.go()
@@ -344,7 +344,7 @@ describe "state transistions", ->
         sm.state.should.be.equal 'idle'
 
 
-    it "could have an optional do: callback (transition hook)", ->
+    it "could have an optional action: callback (transition hook)", ->
 
         sm = state_machine "state", (state, event, transition) ->
 
@@ -354,10 +354,10 @@ describe "state transistions", ->
             state "walking"
 
             event "go", ->
-                transition.on "idle", to: "walking", do: -> @speed += 1
+                transition.from "idle", to: "walking", action: -> @speed += 1
 
             event "stop", ->
-                transition.on "walking", to: "idle", do: -> @speed -= 1
+                transition.from "walking", to: "idle", action: -> @speed -= 1
 
         sm.state.should.be.equal 'idle'
         sm.speed.should.be.equal 0
@@ -369,7 +369,7 @@ describe "state transistions", ->
         sm.speed.should.be.equal 0
 
 
-    it "transition hook should be called with oldState and event fn arguments", ->
+    it "transition hooks should be called with oldState and event args as function arguments", ->
 
         sm = state_machine "state", (state, event, transition) ->
 
@@ -379,7 +379,7 @@ describe "state transistions", ->
             state "walking"
 
             event "go", ->
-                transition.on "idle", to: "walking", do: (oldState, v) ->
+                transition.from "idle", to: "walking", action: (oldState, v) ->
                     oldState.should.be.equal 'idle'
                     @speed += v
 
@@ -396,6 +396,86 @@ describe "state transistions", ->
         sm.stop(4)
         sm.state.should.be.equal 'idle'
         sm.speed.should.be.equal 3
+
+
+    it "transition hooks should also work for parent states", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            @speed = 0
+            @foo = 0
+            @bar = 0
+
+            state.initial "idle", parent: "FOO"
+            state "walking", parent: "BAR"
+            state "BAR", parent: "ROOT"
+
+            event "go", ->
+                transition.from "idle", to: "walking", action: (oldState) ->
+                    oldState.should.be.equal 'idle'
+                    @speed += 1
+                transition.from "FOO", to: "walking", action: -> @foo += 1
+
+            event "stop", ->
+                transition walking: "idle", (oldState) ->
+                    oldState.should.be.equal 'walking'
+                    @speed -= 1
+                transition BAR: "FOO", -> @bar += 2
+                transition ROOT: "FOO", -> @bar += 3
+
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+        sm.foo.should.be.equal 0
+        sm.bar.should.be.equal 0
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        sm.speed.should.be.equal 1
+        sm.foo.should.be.equal 1
+        sm.bar.should.be.equal 0
+        sm.stop()
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+        sm.foo.should.be.equal 1
+        sm.bar.should.be.equal 5
+
+
+    it "transition hooks should not be called twice", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            @speed = 0
+            @foo = 0
+            @bar = 0
+
+            @inc_bar = -> @bar =+ 7
+
+            state.initial "idle", parent: "FOO"
+            state "walking", parent: "BAR"
+            state "BAR", parent: "ROOT"
+
+            event "go", ->
+                transition.from "idle", to: "walking", action: -> @speed += 1
+                transition.from "FOO", to: "walking", action: -> @foo += 1
+
+            event "stop", ->
+                transition walking: "idle", -> @speed -= 1
+                transition BAR: "FOO", @inc_bar
+                transition ROOT: "FOO", @inc_bar
+
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+        sm.foo.should.be.equal 0
+        sm.bar.should.be.equal 0
+        sm.go()
+        sm.state.should.be.equal 'walking'
+        sm.speed.should.be.equal 1
+        sm.foo.should.be.equal 1
+        sm.bar.should.be.equal 0
+        sm.stop()
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+        sm.foo.should.be.equal 1
+        sm.bar.should.be.equal 7
 
 
 
@@ -420,7 +500,7 @@ describe "switching states", ->
 
             event "go", -> transition idle: "walking", walking: "running"
 
-            event "stop", -> transition.on ["running", "walking"], to: "idle"
+            event "stop", -> transition.from ["running", "walking"], to: "idle"
 
 
         sm.state.should.be.equal 'idle'
@@ -457,7 +537,7 @@ describe "switching states", ->
             state "walking"
 
             state.enter "walking", -> is_walking = yes
-            state.enter "running", do: on_enter_running
+            state.enter "running", action: on_enter_running
 
             event "go", -> transition idle: "walking", walking: "running"
 
@@ -487,7 +567,7 @@ describe "switching states", ->
             @inc_go_count = -> @go_count += 1
 
             state.enter "walking", -> is_walking = yes
-            state.enter "walking", "running", do: @inc_go_count
+            state.enter "walking", "running", action: @inc_go_count
 
             state.initial "idle"
             state "running"
@@ -526,7 +606,7 @@ describe "switching states", ->
             @foobar = 7
 
             state.enter "walking", -> is_walking = yes
-            state.enter "walking", "running", do: @inc_go_count
+            state.enter "walking", "running", action: @inc_go_count
 
             state.initial "idle", ->
                 foobar: 13

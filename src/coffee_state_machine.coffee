@@ -51,7 +51,7 @@ state_machine = (stateAttrName, options, fn) ->
 
     create_state_hook = (hook) ->
         (state..., options) ->
-            fn = if typeof options is 'function' then options else options?.do
+            fn = if typeof options is 'function' then options else options?.action
             add_state_hooks hook, state, fn
 
     state_builder.enter = create_state_hook "enter"
@@ -135,10 +135,26 @@ state_machine = (stateAttrName, options, fn) ->
                     if perform_switch
                         oldState = obj[stateAttrName]
                         set_new_state trans.to
-                        if trans.do?
-                            trans.do.apply obj, [oldState].concat args
+
+                        # collect transition hooks from parents
+                        trans_hooks = []
+                        for par_state in get_parent_states(oldState)
+                            par_trans = event_fn.transitions[par_state]
+                            if par_trans?
+                                if par_trans.action? and par_trans.to is obj[stateAttrName] or get_parent_states(obj[stateAttrName]).indexOf(par_trans.to) isnt -1
+                                    trans_hooks.push par_trans.action
+                        if trans.action?
+                            trans_hooks.push trans.action
+
+                        # call transition hooks
+                        trans_hooks_called = []
+                        for hook in trans_hooks when trans_hooks_called.indexOf(hook) is -1
+                            hook.apply obj, [oldState].concat args
+                            trans_hooks_called.push hook
+
                         return true
-            return false
+
+            return false  # no transition found
 
         if typeof callback is 'function'
             current_event = event
@@ -151,10 +167,10 @@ state_machine = (stateAttrName, options, fn) ->
     # transition helper function
     #
     create_state_trans_def = (onState, toState, ifCallback, unlessCallback, doAction) ->
-        trans_def = on: onState, to: toState
+        trans_def = from: onState, to: toState
         trans_def.if = ifCallback if typeof ifCallback is 'function'
         trans_def.unless = unlessCallback if typeof unlessCallback is 'function'
-        trans_def.do = doAction if typeof doAction is 'function'
+        trans_def.action = doAction if typeof doAction is 'function'
         return trans_def
 
     current_state_transitions = ->
@@ -172,13 +188,13 @@ state_machine = (stateAttrName, options, fn) ->
             if typeof args[0] is 'object'
                 create_state_transitions args[0], args[1]
 
-    transition_builder.on = (states, options = {}) ->
+    transition_builder.from = (states, options = {}) ->
         # inside event definition?
         if current_event?
             trans_map = current_state_transitions()
             _states = if typeof states is 'string' then [states] else states
             for on_state in _states
-                trans_map[on_state] = create_state_trans_def on_state, options.to, options.if, options.unless, options.do
+                trans_map[on_state] = create_state_trans_def on_state, options.to, options.if, options.unless, options.action
 
     transition_builder.type = 'coffee_state_machine.TransitionHelperFunction'
 
