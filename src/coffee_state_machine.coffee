@@ -50,10 +50,7 @@ state_machine = (stateAttrName, options, fn) ->
     obj.is_valid_state = (state) -> all_states[state]? and all_states[state].state is state
 
     create_state_hook = (hook) ->
-        #(state..., options) ->
         (state..., fn) ->
-            #fn = if typeof options is 'function' then options else options?.action
-            #add_state_hooks hook, state, fn
             add_state_hooks hook, state, fn
 
     state_builder.enter = create_state_hook "enter"
