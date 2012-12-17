@@ -384,7 +384,7 @@ describe "state transistions", ->
                     @speed += v
 
             event "stop", ->
-                transition.on "walking", to: "idle", do: (oldState, v) ->
+                transition walking: "idle", (oldState, v) ->
                     oldState.should.be.equal 'walking'
                     @speed -= v
 

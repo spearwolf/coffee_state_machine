@@ -124,11 +124,13 @@ state_machine = (stateAttrName, options, fn) ->
         event_fn = obj[event] or= (args...) ->
             trans = event_fn.transitions[obj[stateAttrName]]
             if trans?
-                perform_switch = yes
-                if typeof trans.if is 'function'
+                if trans.if?
                     perform_switch = trans.if.call obj
+                else
+                    perform_switch = yes
+
                 if perform_switch
-                    if typeof trans.unless is 'function'
+                    if trans.unless?
                         perform_switch = not trans.unless.call(obj)
                     if perform_switch
                         oldState = obj[stateAttrName]
@@ -159,16 +161,16 @@ state_machine = (stateAttrName, options, fn) ->
         event_func = obj[current_event]
         event_func.transitions or= {}
 
-    create_state_transitions = (stateTransitionMap) ->
+    create_state_transitions = (stateTransitionMap, transitionHook) ->
         trans_map = current_state_transitions()
         for onState, toState of stateTransitionMap
-            trans_map[onState] = create_state_trans_def onState, toState
+            trans_map[onState] = create_state_trans_def onState, toState, undefined, undefined, transitionHook
 
     transition_builder = (args...) ->
         # inside event definition?
         if current_event?
-            if typeof args[0] is 'object' and args.length is 1
-                create_state_transitions args[0]
+            if typeof args[0] is 'object'
+                create_state_transitions args[0], args[1]
 
     transition_builder.on = (states, options = {}) ->
         # inside event definition?
@@ -177,7 +179,7 @@ state_machine = (stateAttrName, options, fn) ->
             _states = if typeof states is 'string' then [states] else states
             for on_state in _states
                 trans_map[on_state] = create_state_trans_def on_state, options.to, options.if, options.unless, options.do
-                
+
     transition_builder.type = 'coffee_state_machine.TransitionHelperFunction'
 
 
