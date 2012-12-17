@@ -50,8 +50,10 @@ state_machine = (stateAttrName, options, fn) ->
     obj.is_valid_state = (state) -> all_states[state]? and all_states[state].state is state
 
     create_state_hook = (hook) ->
-        (state..., options) ->
-            fn = if typeof options is 'function' then options else options?.action
+        #(state..., options) ->
+        (state..., fn) ->
+            #fn = if typeof options is 'function' then options else options?.action
+            #add_state_hooks hook, state, fn
             add_state_hooks hook, state, fn
 
     state_builder.enter = create_state_hook "enter"
@@ -188,13 +190,13 @@ state_machine = (stateAttrName, options, fn) ->
             if typeof args[0] is 'object'
                 create_state_transitions args[0], args[1]
 
-    transition_builder.from = (states, options = {}) ->
+    transition_builder.from = (states, options, hook) ->
         # inside event definition?
         if current_event?
             trans_map = current_state_transitions()
             _states = if typeof states is 'string' then [states] else states
             for on_state in _states
-                trans_map[on_state] = create_state_trans_def on_state, options.to, options.if, options.unless, options.action
+                trans_map[on_state] = create_state_trans_def on_state, options.to, options.if, options.unless, hook  # options.action
 
     transition_builder.type = 'coffee_state_machine.TransitionHelperFunction'
 

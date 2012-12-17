@@ -344,7 +344,7 @@ describe "state transistions", ->
         sm.state.should.be.equal 'idle'
 
 
-    it "could have an optional action: callback (transition hook)", ->
+    it "could have an optional callback (transition hook)", ->
 
         sm = state_machine "state", (state, event, transition) ->
 
@@ -354,10 +354,10 @@ describe "state transistions", ->
             state "walking"
 
             event "go", ->
-                transition.from "idle", to: "walking", action: -> @speed += 1
+                transition.from "idle", to: "walking", -> @speed += 1
 
             event "stop", ->
-                transition.from "walking", to: "idle", action: -> @speed -= 1
+                transition.from "walking", to: "idle", -> @speed -= 1
 
         sm.state.should.be.equal 'idle'
         sm.speed.should.be.equal 0
@@ -379,7 +379,7 @@ describe "state transistions", ->
             state "walking"
 
             event "go", ->
-                transition.from "idle", to: "walking", action: (oldState, v) ->
+                transition.from "idle", to: "walking", (oldState, v) ->
                     oldState.should.be.equal 'idle'
                     @speed += v
 
@@ -411,10 +411,10 @@ describe "state transistions", ->
             state "BAR", parent: "ROOT"
 
             event "go", ->
-                transition.from "idle", to: "walking", action: (oldState) ->
+                transition.from "idle", to: "walking", (oldState) ->
                     oldState.should.be.equal 'idle'
                     @speed += 1
-                transition.from "FOO", to: "walking", action: -> @foo += 1
+                transition.from "FOO", to: "walking", -> @foo += 1
 
             event "stop", ->
                 transition walking: "idle", (oldState) ->
@@ -454,8 +454,8 @@ describe "state transistions", ->
             state "BAR", parent: "ROOT"
 
             event "go", ->
-                transition.from "idle", to: "walking", action: -> @speed += 1
-                transition.from "FOO", to: "walking", action: -> @foo += 1
+                transition.from "idle", to: "walking", -> @speed += 1
+                transition.from "FOO", to: "walking", -> @foo += 1
 
             event "stop", ->
                 transition walking: "idle", -> @speed -= 1
@@ -537,7 +537,7 @@ describe "switching states", ->
             state "walking"
 
             state.enter "walking", -> is_walking = yes
-            state.enter "running", action: on_enter_running
+            state.enter "running", on_enter_running
 
             event "go", -> transition idle: "walking", walking: "running"
 
@@ -567,7 +567,7 @@ describe "switching states", ->
             @inc_go_count = -> @go_count += 1
 
             state.enter "walking", -> is_walking = yes
-            state.enter "walking", "running", action: @inc_go_count
+            state.enter "walking", "running", @inc_go_count
 
             state.initial "idle"
             state "running"
@@ -606,7 +606,7 @@ describe "switching states", ->
             @foobar = 7
 
             state.enter "walking", -> is_walking = yes
-            state.enter "walking", "running", action: @inc_go_count
+            state.enter "walking", "running", @inc_go_count
 
             state.initial "idle", ->
                 foobar: 13
