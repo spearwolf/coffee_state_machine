@@ -17,7 +17,8 @@ this libray is licensed under the [MIT license](LICENSE).
 
 *  enter/exit state hooks
 
-*  flexible and very readable DSL (based around _states_, _events_ and _transitions_) to define state machines
+*  flexible and very readable DSL (based around _states_, _events_ and _transitions_) to define state machines.
+   (api design original based on [pluginaweek/state_machine](https://github.com/pluginaweek/state_machine), but now differs slighty..)
 
 *  high code-coverage using the [mocha](http://visionmedia.github.com/mocha/) test framework
 
