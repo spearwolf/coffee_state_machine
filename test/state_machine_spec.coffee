@@ -369,7 +369,7 @@ describe "state transistions", ->
         sm.speed.should.be.equal 0
 
 
-    it "transition hooks should be called with oldState and event args as function arguments", ->
+    it "transition hooks should be called with oldState and event arguments as params", ->
 
         sm = state_machine "state", (state, event, transition) ->
 

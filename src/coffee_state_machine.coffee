@@ -125,41 +125,70 @@ state_machine = (stateAttrName, options, fn) ->
     #
     current_event = null
 
+    check_transition_callbacks = (trans) ->
+        (not trans.if? or trans.if.call(obj)) and (not trans.unless? or not trans.unless.call(obj))
+
     event_builder = (event, callback) ->
 
         event_fn = obj[event] or= (args...) ->
-            trans = event_fn.transitions[obj[stateAttrName]]
-            if trans?
-                if trans.if?
-                    perform_switch = trans.if.call obj
+
+            cur_old_state = obj[stateAttrName]
+
+            trans = (event_fn.transitions or= {})[cur_old_state]
+            trans = null if trans? and not check_transition_callbacks(trans)
+
+            all_transitions = (for all_trans in (event_fn.all_transitions or= [])
+                is_valid = all_trans.is_valid(cur_old_state)
+                #console.log('FOUND', (if is_valid then 'valid' else 'invalid'), 'ALL-TRANSITION:', all_trans)
+                if trans? and all_trans.to?
+                    false
                 else
-                    perform_switch = yes
+                    unless all_trans.is_valid(cur_old_state)
+                        false
+                    else
+                        if check_transition_callbacks(all_trans)
+                            if all_trans.to?
+                                trans = all_trans
+                                false
+                            else
+                                all_trans
+                        else
+                            false
+            )
+            all_transitions = (all_trans for all_trans in all_transitions when all_trans isnt false)
 
-                if perform_switch
-                    if trans.unless?
-                        perform_switch = not trans.unless.call(obj)
-                    if perform_switch
-                        oldState = obj[stateAttrName]
-                        set_new_state trans.to
+            #console.log('ALL-TRANSiTIONS:', all_transitions) if all_transitions.length isnt 0
 
-                        # collect transition hooks from parents
-                        trans_hooks = []
-                        for par_state in get_parent_states(oldState)
-                            par_trans = event_fn.transitions[par_state]
-                            if par_trans?
-                                if par_trans.action? and par_trans.to is obj[stateAttrName] or get_parent_states(obj[stateAttrName]).indexOf(par_trans.to) isnt -1
-                                    trans_hooks.push par_trans.action
-                        if trans.action?
-                            trans_hooks.push trans.action
+            if trans?
+                oldState = cur_old_state
+                trans_hooks = []
 
-                        # call transition hooks
-                        trans_hooks_called = []
-                        for hook in trans_hooks when trans_hooks_called.indexOf(hook) is -1
-                            hook.apply obj, [oldState].concat args
-                            trans_hooks_called.push hook
+                if trans.to?
+                    set_new_state trans.to
 
-                        return true
+                    # collect transition hooks from parents
+                    for par_state in get_parent_states(oldState)
+                        par_trans = event_fn.transitions[par_state]
+                        if par_trans?
+                            if par_trans.action? and par_trans.to is obj[stateAttrName] or get_parent_states(obj[stateAttrName]).indexOf(par_trans.to) isnt -1
+                                trans_hooks.push par_trans.action
 
+                # all-transitions
+                for all_trans in all_transitions
+                    if all_trans.action?
+                        trans_hooks.push all_trans.action
+
+                # transition hook
+                if trans.action?
+                    trans_hooks.push trans.action
+
+                # call transition hooks
+                trans_hooks_called = []
+                for hook in trans_hooks when trans_hooks_called.indexOf(hook) is -1
+                    hook.apply obj, [oldState].concat args
+                    trans_hooks_called.push hook
+
+                return true
             return false  # no transition found
 
         if typeof callback is 'function'
@@ -172,16 +201,41 @@ state_machine = (stateAttrName, options, fn) ->
 
     # transition helper function
     #
-    create_state_trans_def = (onState, toState, ifCallback, unlessCallback, doAction) ->
-        trans_def = from: onState, to: toState
+    append_common_state_trans_options = (trans_def, ifCallback, unlessCallback, doAction) ->
         trans_def.if = ifCallback if typeof ifCallback is 'function'
         trans_def.unless = unlessCallback if typeof unlessCallback is 'function'
         trans_def.action = doAction if typeof doAction is 'function'
         return trans_def
 
-    current_state_transitions = ->
-        event_func = obj[current_event]
-        event_func.transitions or= {}
+    create_state_trans_def = (onState, toState, ifCallback, unlessCallback, doAction) ->
+        trans_def =
+            from: onState
+            to: toState
+        append_common_state_trans_options trans_def, ifCallback, unlessCallback, doAction
+
+    make_array = (x) ->
+        if x?
+            if typeof x is 'string'
+                [x]
+            else
+                x
+        else
+            []
+
+    create_all_state_trans_def = (toState, exceptState, onlyState, ifCallback, unlessCallback, doAction) ->
+        trans_def =
+            to: toState
+            except: make_array(exceptState)
+            only: make_array(onlyState)
+            is_valid: (state) ->
+                if state?
+                    (not @toState or @toState is state) and
+                        (@except.length is 0 or @except.find(state) < 0) and
+                        (@only.length is 0 or @only.find(state) >= 0)
+        append_common_state_trans_options trans_def, ifCallback, unlessCallback, doAction
+
+    current_state_transitions = -> obj[current_event].transitions or= {}
+    current_all_state_transitions = -> obj[current_event].all_transitions or= []
 
     create_state_transitions = (stateTransitionMap, transitionHook) ->
         trans_map = current_state_transitions()
@@ -195,12 +249,28 @@ state_machine = (stateAttrName, options, fn) ->
                 create_state_transitions args[0], args[1]
 
     transition_builder.from = (states, options, hook) ->
-        # inside event definition?
-        if current_event?
+        if current_event? # inside event definition?
             trans_map = current_state_transitions()
             _states = if typeof states is 'string' then [states] else states
             for on_state in _states
-                trans_map[on_state] = create_state_trans_def on_state, options.to, options.if, options.unless, hook  # options.action
+                trans_map[on_state] = create_state_trans_def(
+                    on_state,
+                    options.to,
+                    options.if,
+                    options.unless,
+                    hook)  # options.action
+
+    transition_builder.all = (options= {}, hook= undefined) ->
+        if current_event?  # inside event definition?
+            trans_alls = current_all_state_transitions()
+            trans_alls.push create_all_state_trans_def(
+                options.to,
+                options.except,
+                options.only,
+                options.if,
+                options.unless,
+                hook)
+            #console.log('ALL-TRANSITION-MAP FOR ['+current_event+']:', trans_alls)
 
     transition_builder.type = 'coffee_state_machine.TransitionHelperFunction'
 
