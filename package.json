@@ -2,7 +2,7 @@
   "name": "coffee_state_machine",
   "version": "0.0.1",
   "engines": {
-    "node": "0.8.3"
+    "node": "0.10"
   },
   "scripts": {"test": "./node_modules/coffee-script/bin/cake test"},
   "dependencies":{
