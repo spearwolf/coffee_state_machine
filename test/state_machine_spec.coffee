@@ -642,6 +642,57 @@ describe "switching states", ->
         sm.foobar.should.be.equal 14
 
 
+describe "state machine object functions", ->
+
+    it "is_state should also work for parent states", ->
+
+        sm = state_machine 'state', (state, event, transition) ->
+
+            state.initial "idle", parent: 'halted'
+
+            state "walking",  parent: 'action'
+
+            state "running", parent: 'action'
+
+            event "go", -> transition idle: "walking", walking: "running"
+
+            event "stop", -> transition.from ["running", "walking"], to: "idle"
+
+
+        sm.state.should.be.equal 'idle'
+        sm.is_state('idle').should.be.ok
+        sm.is_state('walking').should.be.not.ok
+        sm.is_state('running').should.be.not.ok
+        sm.is_state('halted').should.be.ok
+        sm.is_state('action').should.be.not.ok
+
+        sm.go()
+
+        sm.state.should.be.equal 'walking'
+        sm.is_state('idle').should.be.not.ok
+        sm.is_state('walking').should.be.ok
+        sm.is_state('running').should.be.not.ok
+        sm.is_state('halted').should.be.not.ok
+        sm.is_state('action').should.be.ok
+
+        sm.go()
+
+        sm.state.should.be.equal 'running'
+        sm.is_state('idle').should.be.not.ok
+        sm.is_state('walking').should.be.not.ok
+        sm.is_state('running').should.be.ok
+        sm.is_state('halted').should.be.not.ok
+        sm.is_state('action').should.be.ok
+
+        sm.stop()
+
+        sm.state.should.be.equal 'idle'
+        sm.is_state('idle').should.be.ok
+        sm.is_state('walking').should.be.not.ok
+        sm.is_state('running').should.be.not.ok
+        sm.is_state('halted').should.be.ok
+        sm.is_state('action').should.be.not.ok
+
 
 
 

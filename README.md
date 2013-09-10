@@ -2,8 +2,9 @@
 
 a _finite state machine_ made in and for [CoffeeScript](http://coffeescript.org/) (javascript).
 
-_please note that this software is still at an_ __early stage__.
+_at this moment there is no documentation -- but just take a look into the [tests](test/). is very easy to use._
 
+this libray is licensed under the [MIT license](LICENSE).
 
 
 ### some brief, high-level features include:

@@ -1,4 +1,7 @@
-# coffee_state_machine.coffee - created 2012 by Wolfger Schramm <wolfger@spearwolf.de>
+# =========================================================
+# coffee_state_machine.coffee
+# created 2012-13 by Wolfger Schramm <wolfger@spearwolf.de>
+# =========================================================
 
 state_machine = (stateAttrName, options, fn) ->
 
@@ -67,6 +70,10 @@ state_machine = (stateAttrName, options, fn) ->
             []
 
     obj.get_parent_states = (state) -> get_parent_states state
+
+    obj.is_state = (state) ->
+        cur_state = obj[stateAttrName]
+        cur_state is state or get_parent_states(cur_state).indexOf(state) >= 0
 
     foreach_parent_states = (state, fn) ->
         fn(state) for state in get_parent_states(state)
