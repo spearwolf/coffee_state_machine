@@ -19,8 +19,10 @@ state_machine = (stateAttrName, options, fn) ->
         obj = options.extend ? {}
 
 
-    # state helper function
-    #
+    # ========================================
+    # STATE helper function
+    # ========================================
+
     all_states = {}
     state_hooks = {}
 
@@ -121,8 +123,10 @@ state_machine = (stateAttrName, options, fn) ->
         call_state_hooks nextState, "enter" if (oldState is false or nextState isnt oldState) and parents.old.indexOf(nextState) is -1
 
 
-    # event helper function
-    #
+    # ========================================
+    # EVENT helper function
+    # ========================================
+
     current_event = null
 
     check_transition_callbacks = (trans) ->
@@ -137,28 +141,12 @@ state_machine = (stateAttrName, options, fn) ->
             trans = (event_fn.transitions or= {})[current_state]
             trans = null if trans? and not check_transition_callbacks(trans)
 
-            all_transitions = (for all_trans in (event_fn.all_transitions or= [])
-                is_valid = all_trans.is_valid(current_state)
-                #console.log('FOUND', (if is_valid then 'valid' else 'invalid'), 'ALL-TRANSITION:', all_trans)
-                if trans? and all_trans.to?
-                    false
-                else
-                    unless all_trans.is_valid(current_state)
-                        false
-                    else
+            unless trans?
+                for all_trans in (event_fn.all_transitions or= [])
+                    if all_trans.is_valid(current_state)
                         if check_transition_callbacks(all_trans)
-                            if all_trans.to?
-                                trans = all_trans
-                                false
-                            else
-                                all_trans
-                        else
-                            false
-            )
-            all_transitions = (all_trans for all_trans in all_transitions when all_trans isnt false)
-
-            #console.log('ALL-TRANSiTIONS:', all_transitions) if all_transitions.length isnt 0
-
+                            trans = all_trans
+                            break
             if trans?
                 old_state = current_state
 
@@ -195,8 +183,10 @@ state_machine = (stateAttrName, options, fn) ->
     event_builder.type = 'coffee_state_machine.EventHelperFunction'
 
 
-    # transition helper function
-    #
+    # ========================================
+    # TRANSITION helper function
+    # ========================================
+
     append_common_state_trans_options = (trans_def, ifCallback, unlessCallback, doAction) ->
         trans_def.if = ifCallback if typeof ifCallback is 'function'
         trans_def.unless = unlessCallback if typeof unlessCallback is 'function'
@@ -236,7 +226,12 @@ state_machine = (stateAttrName, options, fn) ->
     create_state_transitions = (stateTransitionMap, transitionHook) ->
         trans_map = current_state_transitions()
         for onState, toState of stateTransitionMap
-            trans_map[onState] = create_state_trans_def onState, toState, undefined, undefined, transitionHook
+            trans_map[onState] = create_state_trans_def(
+                onState,
+                toState,
+                undefined,
+                undefined,
+                transitionHook)
 
     transition_builder = (args...) ->
         # inside event definition?
@@ -245,7 +240,7 @@ state_machine = (stateAttrName, options, fn) ->
                 create_state_transitions args[0], args[1]
 
     transition_builder.from = (states, options, hook) ->
-        if current_event? # inside event definition?
+        if current_event?
             trans_map = current_state_transitions()
             _states = if typeof states is 'string' then [states] else states
             for on_state in _states
@@ -254,10 +249,10 @@ state_machine = (stateAttrName, options, fn) ->
                     options.to,
                     options.if,
                     options.unless,
-                    hook)  # options.action
+                    (hook or options.action))
 
     transition_builder.all = (options= {}, hook= undefined) ->
-        if current_event?  # inside event definition?
+        if current_event?
             trans_alls = current_all_state_transitions()
             trans_alls.push create_all_state_trans_def(
                 options.to,
@@ -265,11 +260,14 @@ state_machine = (stateAttrName, options, fn) ->
                 options.only,
                 options.if,
                 options.unless,
-                hook)
-            #console.log('ALL-TRANSITION-MAP FOR ['+current_event+']:', trans_alls)
+                (hook or options.action))
 
     transition_builder.type = 'coffee_state_machine.TransitionHelperFunction'
 
+
+    # ========================================
+    # initialize
+    # ========================================
 
     # call given function within context of state object
     fn.call obj, state_builder, event_builder, transition_builder
