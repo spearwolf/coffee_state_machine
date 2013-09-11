@@ -15,7 +15,7 @@ this libray is licensed under the [MIT license](LICENSE).
 
 *  hierarchical states (states could have parent/child relationships)
 
-*  enter/exit state hooks
+*  state (enter, exit) and transitions callbacks
 
 *  flexible and very readable DSL based around _states_, _events_ and _transitions_.
    design original based on [pluginaweek/state_machine](https://github.com/pluginaweek/state_machine), but now it's slightly different ..
