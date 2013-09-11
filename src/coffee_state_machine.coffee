@@ -264,24 +264,20 @@ state_machine = (stateAttrName, options, fn) ->
             callback.call obj
             current_event = null
 
-        # XXX need to think about ..
-        #wrap_transition_builder = (fn, ev, retFn) ->
-            #wrap_fn = (args...) ->
-                #lazy_fn = (_args) ->
-                    #prev_cur_event = current_event
-                    #current_event = ev
-                    #fn.apply @, _args
-                    #current_event = prev_cur_event
-                #lazy_transition_funcs.push fn: lazy_fn, args: args
-                #return (transition: retFn) or wrap_fn
-            #return wrap_fn
+        lazy_transition_builder =
+            transition: (args...) ->
+                lazy_transition_funcs.push fn: transition_builder, event: event, args: args
+                return lazy_transition_builder
 
-        #wrapped_transition_builder = wrap_transition_builder(transition_builder, event)
-        #wrapped_api = transition: wrapped_transition_builder
-        #wrapped_transition_builder.from = wrap_transition_builder(transition_builder.from, event, wrapped_api)
-        #wrapped_transition_builder.all = wrap_transition_builder(transition_builder.all, event, wrapped_api)
+        lazy_transition_builder.transition.from = (args...) ->
+            lazy_transition_funcs.push fn: transition_builder.from, event: event, args: args
+            return lazy_transition_builder
 
-        #return wrapped_api
+        lazy_transition_builder.transition.all = (args...) ->
+            lazy_transition_funcs.push fn: transition_builder.all, event: event, args: args
+            return lazy_transition_builder
+
+        return lazy_transition_builder
 
 
     event_builder.type = 'coffee_state_machine.EventHelperFunction'
@@ -296,7 +292,9 @@ state_machine = (stateAttrName, options, fn) ->
 
     # call lazy transition definitions
     for lazy in lazy_transition_funcs
-        lazy.fn.call @, lazy.args
+        current_event = lazy.event
+        lazy.fn.apply @, lazy.args
+    current_event = null
 
     # add state attribute to object
     obj[stateAttrName] or= options.initial

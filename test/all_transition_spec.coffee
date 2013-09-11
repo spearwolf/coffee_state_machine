@@ -27,16 +27,14 @@ describe "transition.all", ->
                     @is_concrete_to_transition = no
 
 
-            event 'urks', ->
-                
-                transition.all to: 'foo'
+            event('urks').transition.all to: 'foo'
+
 
             #event('mumba')
-                #.transition.all except: 'bar', to: 'plah'
+                #.transition.all(except: 'bar', to: 'plah')
                 #.transition.all only: ['bar'], to: 'foo'
 
             event 'mumba', ->
-
                 transition.all except: 'bar', to: 'plah'
                 transition.all only: ['bar'], to: 'foo'
 
