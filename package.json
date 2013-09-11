@@ -1,21 +1,37 @@
 {
-  "name": "coffee_state_machine",
-  "version": "0.2.1",
-  "engines": {
-    "node": "0.10"
-  },
-  "scripts": {
-    "test": "grunt test"
-  },
-  "devDependencies": {
-    "grunt-mocha-test": "~0.6.3",
-    "mocha": "~1.12.1",
-    "should": "~1.2.2",
-    "sinon": "~1.7.3",
-    "coffee-script": "~1.6.3",
-    "grunt": "~0.4.1",
-    "grunt-contrib-coffee": "~0.7.0",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-uglify": "~0.2.4"
-  }
+    "name":         "coffee_state_machine",
+    "description":  "a finite state machine made in and for coffeescript (javascript)",
+    "version":      "0.2.1",
+    "url":          "https://github.com/spearwolf/coffee_state_machine",
+    "repository": {
+        "type":     "git",
+        "url":      "git://github.com/spearwolf/coffee_state_machine.git"
+    },
+    "license":      "MIT",
+    "author": {
+        "name":     "Wolfger Schramm",
+        "email":    "wolfger@spearwolf.de",
+        "url":      "https://github.com/spearwolf"
+    },
+
+    "main":         "dist/coffee_state_machine.js",
+    "engines": {
+        "node":     "0.10"
+    },
+    "scripts": {
+        "test":     "grunt test",
+        "build":    "grunt build"
+    },
+
+    "devDependencies": {
+        "grunt-mocha-test": "~0.6.3",
+        "mocha": "~1.12.1",
+        "should": "~1.2.2",
+        "sinon": "~1.7.3",
+        "coffee-script": "~1.6.3",
+        "grunt": "~0.4.1",
+        "grunt-contrib-coffee": "~0.7.0",
+        "grunt-contrib-clean": "~0.5.0",
+        "grunt-contrib-uglify": "~0.2.4"
+    }
 }
