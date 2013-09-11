@@ -698,7 +698,7 @@ describe "state machine object functions", ->
 
 # TODO
 #
-# transition.all :except => [], :only => []
+# (done) transition.all :except => [], :only => []
 # transition.same()
 
 

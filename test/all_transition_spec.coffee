@@ -28,9 +28,12 @@ describe "transition.all", ->
 
 
             event 'urks', ->
-
+                
                 transition.all to: 'foo'
 
+            #event('mumba')
+                #.transition.all except: 'bar', to: 'plah'
+                #.transition.all only: ['bar'], to: 'foo'
 
             event 'mumba', ->
 

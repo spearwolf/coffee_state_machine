@@ -124,66 +124,6 @@ state_machine = (stateAttrName, options, fn) ->
 
 
     # ========================================
-    # EVENT helper function
-    # ========================================
-
-    current_event = null
-
-    check_transition_callbacks = (trans) ->
-        (not trans.if? or trans.if.call(obj)) and (not trans.unless? or not trans.unless.call(obj))
-
-    event_builder = (event, callback) ->
-
-        event_fn = obj[event] or= (args...) ->
-
-            current_state = obj[stateAttrName]
-
-            trans = (event_fn.transitions or= {})[current_state]
-            trans = null if trans? and not check_transition_callbacks(trans)
-
-            unless trans?
-                for all_trans in (event_fn.all_transitions or= [])
-                    if all_trans.is_valid(current_state)
-                        if check_transition_callbacks(all_trans)
-                            trans = all_trans
-                            break
-            if trans?
-                old_state = current_state
-
-                set_new_state(trans.to)
-
-                current_state = obj[stateAttrName]
-                trans_hooks = []
-
-                # collect transition hooks from parents
-                for par_state in get_parent_states(old_state)
-                    par_trans = event_fn.transitions[par_state]
-                    if par_trans? and par_trans.action?
-                        if par_trans.to is current_state or get_parent_states(current_state).indexOf(par_trans.to) isnt -1
-                            trans_hooks.push(par_trans.action)
-
-                # transition hook
-                trans_hooks.push(trans.action) if trans.action?
-
-                # call transition hooks
-                trans_hooks_called = []
-                for hook in trans_hooks when trans_hooks_called.indexOf(hook) is -1
-                    hook.apply obj, [old_state].concat(args)
-                    trans_hooks_called.push(hook)
-
-                return true
-
-            return false  # no transition found
-
-        if typeof callback is 'function'
-            current_event = event
-            callback.call obj
-            current_event = null
-
-    event_builder.type = 'coffee_state_machine.EventHelperFunction'
-
-
-    # ========================================
     # TRANSITION helper function
     # ========================================
 
@@ -266,11 +206,97 @@ state_machine = (stateAttrName, options, fn) ->
 
 
     # ========================================
+    # EVENT helper function
+    # ========================================
+
+    lazy_transition_funcs = []
+
+    current_event = null
+
+    check_transition_callbacks = (trans) ->
+        (not trans.if? or trans.if.call(obj)) and (not trans.unless? or not trans.unless.call(obj))
+
+    event_builder = (event, callback) ->
+
+        event_fn = obj[event] or= (args...) ->
+
+            current_state = obj[stateAttrName]
+
+            trans = (event_fn.transitions or= {})[current_state]
+            trans = null if trans? and not check_transition_callbacks(trans)
+
+            unless trans?
+                for all_trans in (event_fn.all_transitions or= [])
+                    if all_trans.is_valid(current_state)
+                        if check_transition_callbacks(all_trans)
+                            trans = all_trans
+                            break
+            if trans?
+                old_state = current_state
+
+                set_new_state(trans.to)
+
+                current_state = obj[stateAttrName]
+                trans_hooks = []
+
+                # collect transition hooks from parents
+                for par_state in get_parent_states(old_state)
+                    par_trans = event_fn.transitions[par_state]
+                    if par_trans? and par_trans.action?
+                        if par_trans.to is current_state or get_parent_states(current_state).indexOf(par_trans.to) isnt -1
+                            trans_hooks.push(par_trans.action)
+
+                # transition hook
+                trans_hooks.push(trans.action) if trans.action?
+
+                # call transition hooks
+                trans_hooks_called = []
+                for hook in trans_hooks when trans_hooks_called.indexOf(hook) is -1
+                    hook.apply obj, [old_state].concat(args)
+                    trans_hooks_called.push(hook)
+
+                return true
+
+            return false  # no transition found
+
+        if typeof callback is 'function'
+            current_event = event
+            callback.call obj
+            current_event = null
+
+        # XXX need to think about ..
+        #wrap_transition_builder = (fn, ev, retFn) ->
+            #wrap_fn = (args...) ->
+                #lazy_fn = (_args) ->
+                    #prev_cur_event = current_event
+                    #current_event = ev
+                    #fn.apply @, _args
+                    #current_event = prev_cur_event
+                #lazy_transition_funcs.push fn: lazy_fn, args: args
+                #return (transition: retFn) or wrap_fn
+            #return wrap_fn
+
+        #wrapped_transition_builder = wrap_transition_builder(transition_builder, event)
+        #wrapped_api = transition: wrapped_transition_builder
+        #wrapped_transition_builder.from = wrap_transition_builder(transition_builder.from, event, wrapped_api)
+        #wrapped_transition_builder.all = wrap_transition_builder(transition_builder.all, event, wrapped_api)
+
+        #return wrapped_api
+
+
+    event_builder.type = 'coffee_state_machine.EventHelperFunction'
+
+
+    # ========================================
     # initialize
     # ========================================
 
     # call given function within context of state object
     fn.call obj, state_builder, event_builder, transition_builder
+
+    # call lazy transition definitions
+    for lazy in lazy_transition_funcs
+        lazy.fn.call @, lazy.args
 
     # add state attribute to object
     obj[stateAttrName] or= options.initial
