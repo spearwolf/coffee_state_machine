@@ -1,7 +1,7 @@
 should = require "should"
 {state_machine} = require "./../lib/coffee_state_machine"
 
-describe "transtion.all", ->
+describe "transition.all", ->
 
     it "to: <state> should have lower prio than concrete to-transition def", ->
 
@@ -9,7 +9,6 @@ describe "transtion.all", ->
 
             @all_active = no
             @is_concrete_to_transition = no
-            @hola = false
 
             state.initial 'foo'
             state 'bar'
@@ -27,15 +26,19 @@ describe "transtion.all", ->
                 transition.all to: 'bar', ->
                     @is_concrete_to_transition = no
 
-                #transition.all -> @hola = yes
-
 
             event 'urks', ->
+
                 transition.all to: 'foo'
 
 
+            event 'mumba', ->
+
+                transition.all except: 'bar', to: 'plah'
+                transition.all only: ['bar'], to: 'foo'
+
+
         sm.is_state('foo').should.be.ok
-        sm.hola.should.be.not.ok
 
         sm.yep()
         sm.state.should.be.equal 'bar'
@@ -49,11 +52,15 @@ describe "transtion.all", ->
 
         sm.all_active = yes
         sm.is_concrete_to_transition.should.be.ok
-        sm.hola = no
 
         sm.yep()
         sm.state.should.be.equal 'bar'
         sm.is_concrete_to_transition.should.be.not.ok
-        #sm.hola.should.be.ok
+
+        sm.mumba()
+        sm.state.should.be.equal 'foo'
+
+        sm.mumba()
+        sm.state.should.be.equal 'plah'
 
 

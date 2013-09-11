@@ -132,18 +132,18 @@ state_machine = (stateAttrName, options, fn) ->
 
         event_fn = obj[event] or= (args...) ->
 
-            cur_old_state = obj[stateAttrName]
+            current_state = obj[stateAttrName]
 
-            trans = (event_fn.transitions or= {})[cur_old_state]
+            trans = (event_fn.transitions or= {})[current_state]
             trans = null if trans? and not check_transition_callbacks(trans)
 
             all_transitions = (for all_trans in (event_fn.all_transitions or= [])
-                is_valid = all_trans.is_valid(cur_old_state)
+                is_valid = all_trans.is_valid(current_state)
                 #console.log('FOUND', (if is_valid then 'valid' else 'invalid'), 'ALL-TRANSITION:', all_trans)
                 if trans? and all_trans.to?
                     false
                 else
-                    unless all_trans.is_valid(cur_old_state)
+                    unless all_trans.is_valid(current_state)
                         false
                     else
                         if check_transition_callbacks(all_trans)
@@ -160,35 +160,31 @@ state_machine = (stateAttrName, options, fn) ->
             #console.log('ALL-TRANSiTIONS:', all_transitions) if all_transitions.length isnt 0
 
             if trans?
-                oldState = cur_old_state
+                old_state = current_state
+
+                set_new_state(trans.to)
+
+                current_state = obj[stateAttrName]
                 trans_hooks = []
 
-                if trans.to?
-                    set_new_state trans.to
-
-                    # collect transition hooks from parents
-                    for par_state in get_parent_states(oldState)
-                        par_trans = event_fn.transitions[par_state]
-                        if par_trans?
-                            if par_trans.action? and par_trans.to is obj[stateAttrName] or get_parent_states(obj[stateAttrName]).indexOf(par_trans.to) isnt -1
-                                trans_hooks.push par_trans.action
-
-                # all-transitions
-                for all_trans in all_transitions
-                    if all_trans.action?
-                        trans_hooks.push all_trans.action
+                # collect transition hooks from parents
+                for par_state in get_parent_states(old_state)
+                    par_trans = event_fn.transitions[par_state]
+                    if par_trans? and par_trans.action?
+                        if par_trans.to is current_state or get_parent_states(current_state).indexOf(par_trans.to) isnt -1
+                            trans_hooks.push(par_trans.action)
 
                 # transition hook
-                if trans.action?
-                    trans_hooks.push trans.action
+                trans_hooks.push(trans.action) if trans.action?
 
                 # call transition hooks
                 trans_hooks_called = []
                 for hook in trans_hooks when trans_hooks_called.indexOf(hook) is -1
-                    hook.apply obj, [oldState].concat args
-                    trans_hooks_called.push hook
+                    hook.apply obj, [old_state].concat(args)
+                    trans_hooks_called.push(hook)
 
                 return true
+
             return false  # no transition found
 
         if typeof callback is 'function'
@@ -230,8 +226,8 @@ state_machine = (stateAttrName, options, fn) ->
             is_valid: (state) ->
                 if state?
                     (not @toState or @toState is state) and
-                        (@except.length is 0 or @except.find(state) < 0) and
-                        (@only.length is 0 or @only.find(state) >= 0)
+                        (@except.length is 0 or @except.indexOf(state) < 0) and
+                        (@only.length is 0 or @only.indexOf(state) >= 0)
         append_common_state_trans_options trans_def, ifCallback, unlessCallback, doAction
 
     current_state_transitions = -> obj[current_event].transitions or= {}
