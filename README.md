@@ -7,7 +7,7 @@ _currently there is no separated documentation - but just take a look into [test
 this libray is licensed under the [MIT license](LICENSE).
 
 
-### some brief, high-level features include:
+#### some brief, high-level features include:
 
 *  defining state machines on any javascript object or class (constructor)
 
