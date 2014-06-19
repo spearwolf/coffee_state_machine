@@ -369,33 +369,48 @@ describe "state transistions", ->
         sm.speed.should.be.equal 0
 
 
-    it "transition hooks should be called with oldState and event arguments as params", ->
+    it "transition hooks should be called with oldState and newState as arguments", ->
 
         sm = state_machine "state", (state, event, transition) ->
 
-            @speed = 0
-
             state.initial "idle"
-            state "walking"
+            state "walking", parent: 'action'
+            state "running", parent: 'action'
 
             event "go", ->
-                transition.from "idle", to: "walking", (oldState, v) ->
+                transition.from "idle", to: "walking", (oldState, newState) ->
                     oldState.should.be.equal 'idle'
-                    @speed += v
+                    newState.should.be.equal 'walking'
+
+                transition.from "walking", to: "running", (oldState, newState) ->
+                    oldState.should.be.equal 'walking'
+                    newState.should.be.equal 'running'
 
             event "stop", ->
-                transition walking: "idle", (oldState, v) ->
-                    oldState.should.be.equal 'walking'
-                    @speed -= v
+                transition.all to: "idle", (oldState, newState) ->
+                    oldState.should.match /^(walking|running|idle)$/
+                    newState.should.be.equal 'idle'
+
 
         sm.state.should.be.equal 'idle'
-        sm.speed.should.be.equal 0
-        sm.go(7)
+
+        sm.go()
         sm.state.should.be.equal 'walking'
-        sm.speed.should.be.equal 7
-        sm.stop(4)
+
+        sm.stop()
         sm.state.should.be.equal 'idle'
-        sm.speed.should.be.equal 3
+
+        sm.go()
+        sm.state.should.be.equal 'walking'
+
+        sm.go()
+        sm.state.should.be.equal 'running'
+
+        sm.stop()
+        sm.state.should.be.equal 'idle'
+
+        sm.stop()
+        sm.state.should.be.equal 'idle'
 
 
     it "transition hooks should also work for parent states", ->
@@ -640,6 +655,39 @@ describe "switching states", ->
         sm.go_count.should.be.equal 2
         sm.motion_count.should.be.equal 2
         sm.foobar.should.be.equal 14
+
+
+    it "should copy all properties from optional state argument to state object", ->
+
+        sm = state_machine "state", (state, event, transition) ->
+
+            @speed = 0
+
+            state.initial "idle"
+            state "walking"
+
+            event "go", ->
+                transition.from "idle", to: "walking"
+
+            event "stop", ->
+                transition walking: "idle"
+
+        sm.state.should.be.equal 'idle'
+        sm.speed.should.be.equal 0
+
+        sm.go speed: 7, foo: 'bar'
+
+        sm.speed.should.be.equal 7
+        sm.foo.should.be.equal 'bar'
+        sm.state.should.be.equal 'walking'
+
+        sm.stop speed: 4, plah: 42
+
+        sm.speed.should.be.equal 4
+        sm.foo.should.be.equal 'bar'
+        sm.plah.should.be.equal 42
+        sm.state.should.be.equal 'idle'
+
 
 
 describe "state machine object functions", ->

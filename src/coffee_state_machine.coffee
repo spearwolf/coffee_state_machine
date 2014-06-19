@@ -1,6 +1,6 @@
 # =========================================================
 # coffee_state_machine.coffee
-# created 2012-13 by Wolfger Schramm <wolfger@spearwolf.de>
+# created 2012-14 by Wolfger Schramm <wolfger@spearwolf.de>
 # =========================================================
 
 state_machine = (stateAttrName, options, fn) ->
@@ -218,7 +218,7 @@ state_machine = (stateAttrName, options, fn) ->
 
     event_builder = (event, callback) ->
 
-        event_fn = obj[event] or= (args...) ->
+        event_fn = obj[event] or= (props) ->
 
             current_state = obj[stateAttrName]
 
@@ -233,6 +233,9 @@ state_machine = (stateAttrName, options, fn) ->
                             break
             if trans?
                 old_state = current_state
+
+                if 'object' is typeof props
+                    obj[key] = value for key, value of props
 
                 set_new_state(trans.to)
 
@@ -252,7 +255,7 @@ state_machine = (stateAttrName, options, fn) ->
                 # call transition hooks
                 trans_hooks_called = []
                 for hook in trans_hooks when trans_hooks_called.indexOf(hook) is -1
-                    hook.apply obj, [old_state].concat(args)
+                    hook.apply obj, [old_state, current_state]
                     trans_hooks_called.push(hook)
 
                 return true
