@@ -1,7 +1,7 @@
 {
   "name": "coffee_state_machine",
   "description": "a finite state machine made in and for coffeescript (javascript)",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "url": "https://github.com/spearwolf/coffee_state_machine",
   "repository": {
     "type": "git",
@@ -22,14 +22,14 @@
     "build": "grunt build"
   },
   "devDependencies": {
-    "grunt-mocha-test": "^0.6.3",
-    "mocha": "^1.12.1",
-    "should": "^1.2.2",
-    "sinon": "^1.7.3",
-    "coffee-script": "^1.6.3",
-    "grunt": "^0.4.5",
-    "grunt-contrib-coffee": "^0.7.0",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-uglify": "^0.2.7"
+    "grunt-mocha-test": "^0.11.0",
+    "mocha": "*",
+    "should": "^4.0.4",
+    "sinon": "*",
+    "coffee-script": "*",
+    "grunt": "*",
+    "grunt-contrib-coffee": "^0.10.1",
+    "grunt-contrib-clean": "*",
+    "grunt-contrib-uglify": "^0.5.0"
   }
 }

@@ -313,7 +313,7 @@ state_machine = (stateAttrName, options, fn) ->
 
 # ===== CommonJS and AMD support ====== {{{
 if typeof define is 'function' and define.amd
-    define "state_machine", -> state_machine
+    define -> state_machine
 else
     root = exports ? this
     root.state_machine = state_machine

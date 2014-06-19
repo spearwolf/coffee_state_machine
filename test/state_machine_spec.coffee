@@ -8,7 +8,7 @@ describe "state_machine", ->
         sm = state_machine "state", initial: "idle", ->
 
         should.exist sm
-        sm.should.be.a "object"
+        sm.should.be.an.Object
 
 
     it "should return an object with initialized state attribute", ->
@@ -64,7 +64,7 @@ describe "state_machine", ->
         state_machine "state", (state) -> state_func = state
 
         should.exist state_func
-        state_func.should.be.a "function"
+        state_func.should.be.a.Function
         state_func.type.should.be.equal 'coffee_state_machine.StateHelperFunction'
 
 
@@ -75,7 +75,7 @@ describe "state_machine", ->
         state_machine "state", (state, event) -> event_func = event
 
         should.exist event_func
-        event_func.should.be.a "function"
+        event_func.should.be.a.Function
         event_func.type.should.be.equal 'coffee_state_machine.EventHelperFunction'
 
 
@@ -86,7 +86,7 @@ describe "state_machine", ->
         state_machine "state", (state, event, transition) -> transition_func = transition
 
         should.exist transition_func
-        transition_func.should.be.a "function"
+        transition_func.should.be.a.Function
         transition_func.type.should.be.equal 'coffee_state_machine.TransitionHelperFunction'
 
 
@@ -122,8 +122,8 @@ describe "state helper function", ->
             state_func1 = state
 
         should.exist state_func1
-        state_func1.should.be.a "function"
-        state_func1.initial.should.be.a "function"
+        state_func1.should.be.a.Function
+        state_func1.initial.should.be.a.Function
         sm.state.should.be.equal "foo"
 
 
@@ -166,8 +166,8 @@ describe "event helper function", ->
 
             event "stop"
 
-        sm.start.should.be.a "function"
-        sm.stop.should.be.a "function"
+        sm.start.should.be.a.Function
+        sm.stop.should.be.a.Function
 
 
 
@@ -183,16 +183,16 @@ describe "transition helper function", ->
 
             event "stop", -> transition running: "idle"
 
-        sm.start.should.be.a 'function'
-        sm.start.transitions.should.be.a 'object'
-        sm.start.transitions.idle.should.be.a 'object'
+        sm.start.should.be.a.Function
+        sm.start.transitions.should.be.an.Object
+        sm.start.transitions.idle.should.be.an.Object
         sm.start.transitions.idle.from.should.be.equal 'idle'
         sm.start.transitions.idle.to.should.be.equal 'running'
         should.not.exist sm.start.transitions.running
 
-        sm.stop.should.be.a 'function'
-        sm.stop.transitions.should.be.a 'object'
-        sm.stop.transitions.running.should.be.a 'object'
+        sm.stop.should.be.a.Function
+        sm.stop.transitions.should.be.an.Object
+        sm.stop.transitions.running.should.be.an.Object
         sm.stop.transitions.running.from.should.be.equal 'running'
         sm.stop.transitions.running.to.should.be.equal 'idle'
         should.not.exist sm.stop.transitions.idle
@@ -215,28 +215,28 @@ describe "transition helper function", ->
             event "stop", ->
                 transition.from "walking", to: "idle", unless: -> freezed
 
-        sm.go.should.be.a 'function'
-        sm.go.transitions.should.be.a 'object'
-        sm.go.transitions.idle.should.be.a 'object'
+        sm.go.should.be.a.Function
+        sm.go.transitions.should.be.an.Object
+        sm.go.transitions.idle.should.be.an.Object
         sm.go.transitions.idle.from.should.be.equal 'idle'
         sm.go.transitions.idle.to.should.be.equal 'walking'
-        sm.go.transitions.idle.if.should.be.a 'function'
+        sm.go.transitions.idle.if.should.be.a.Function
         should.not.exist sm.go.transitions.walking
 
-        sm.gogogo.should.be.a 'function'
-        sm.gogogo.transitions.should.be.a 'object'
-        sm.gogogo.transitions.idle.should.be.a 'object'
+        sm.gogogo.should.be.a.Function
+        sm.gogogo.transitions.should.be.an.Object
+        sm.gogogo.transitions.idle.should.be.an.Object
         sm.gogogo.transitions.idle.from.should.be.equal 'idle'
         sm.gogogo.transitions.idle.to.should.be.equal 'walking'
         should.not.exist sm.gogogo.transitions.idle.if
         should.not.exist sm.gogogo.transitions.walking
 
-        sm.stop.should.be.a 'function'
-        sm.stop.transitions.should.be.a 'object'
-        sm.stop.transitions.walking.should.be.a 'object'
+        sm.stop.should.be.a.Function
+        sm.stop.transitions.should.be.an.Object
+        sm.stop.transitions.walking.should.be.an.Object
         sm.stop.transitions.walking.from.should.be.equal 'walking'
         sm.stop.transitions.walking.to.should.be.equal 'idle'
-        sm.stop.transitions.walking.unless.should.be.a 'function'
+        sm.stop.transitions.walking.unless.should.be.a.Function
         should.not.exist sm.stop.transitions.idle
 
 

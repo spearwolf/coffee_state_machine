@@ -22,7 +22,7 @@ module.exports = function(grunt) {
             test: {
                 options: {
                     reporter: 'spec',
-                    require: 'coffee-script'
+                    require: 'coffee-script/register'
                 },
                 src: ['test/**/*.coffee']
             }
@@ -30,7 +30,7 @@ module.exports = function(grunt) {
 
         uglify: {
             options: {
-                banner: "/*! <%= pkg.name %> <%= grunt.template.today('yyyy-mm-dd') %> */\n/*! created 2012-13 by Wolfger Schramm <wolfger@spearwolf.de> */\n/*! https://github.com/spearwolf/coffee_state_machine */\n"
+                banner: "/*! <%= pkg.name %> <%= grunt.template.today('yyyy-mm-dd') %> */\n/*! created 2012-14 by Wolfger Schramm <wolfger@spearwolf.de> */\n/*! https://github.com/spearwolf/coffee_state_machine */\n"
             },
             dist: {
                 files: {
