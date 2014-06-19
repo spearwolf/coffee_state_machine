@@ -23,3 +23,50 @@ this libray is licensed under the [MIT license](LICENSE).
 *  high code-coverage using the [mocha](http://visionmedia.github.com/mocha/) test framework
 
 *  written in 100% [CoffeeScript](http://coffeescript.org/)
+
+
+#### cheat sheet
+
+~~~~
+
+sm = state_machine 'state', (state, event, transition) ->
+
+   state.initial 'foo'
+
+   state 'plah', ->
+
+      one: -> yes
+      two: -> no
+
+   state 'bar', parent: 'plah', enter: (-> "onEnterBar"), exit: (-> "onExitBar"), ->
+
+      one: -> no
+      two: -> yes
+
+
+   event 'boom', ->
+
+      transition
+         plah: foo
+         bar: plah
+
+      transition.from 'foo', to: 'bar', if: -> true, unless: -> false
+
+
+   event 'bang', ->
+
+      transition.from ['foo', 'bar'], to: 'bar', action: (oldState, newState) -> "..."
+
+      transition.all except: 'bar', only: ['foo'], to: 'plah'
+
+
+
+   sm.two = 2
+   sm.boom three: 42
+
+   sm.three is 42             # => yes
+   sm.two()                   # => yes
+   sm.state is 'bar'          # => yes
+   sm.is_valid_state('plah')  # => yes
+
+~~~~
