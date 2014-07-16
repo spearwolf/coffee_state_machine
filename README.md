@@ -67,6 +67,6 @@ sm = state_machine 'state', (state, event, transition) ->
    sm.three is 42             # => yes
    sm.two()                   # => yes
    sm.state is 'bar'          # => yes
-   sm.is_valid_state('plah')  # => yes
+   sm.is_state('plah')        # => yes
 
 ```
