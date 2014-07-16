@@ -27,7 +27,7 @@ this libray is licensed under the [MIT license](LICENSE).
 
 #### cheat sheet
 
-~~~~
+``` coffeescript
 
 sm = state_machine 'state', (state, event, transition) ->
 
@@ -69,4 +69,4 @@ sm = state_machine 'state', (state, event, transition) ->
    sm.state is 'bar'          # => yes
    sm.is_valid_state('plah')  # => yes
 
-~~~~
+```
