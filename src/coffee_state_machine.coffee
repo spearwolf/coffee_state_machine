@@ -257,7 +257,7 @@ state_machine = (stateAttrName, options, fn) ->
                 for hook in trans_hooks when trans_hooks_called.indexOf(hook) is -1
                     if typeof hook is 'function'
                         hook.apply obj, [old_state, current_state]
-                    else if typeof hook is 'string'
+                    else if typeof hook is 'string' and 'function' is typeof obj[hook]
                         obj[hook](old_state, current_state)
                     trans_hooks_called.push(hook)
 
