@@ -130,7 +130,7 @@ state_machine = (stateAttrName, options, fn) ->
     append_common_state_trans_options = (trans_def, ifCallback, unlessCallback, doAction) ->
         trans_def.if = ifCallback if typeof ifCallback is 'function'
         trans_def.unless = unlessCallback if typeof unlessCallback is 'function'
-        trans_def.action = doAction if typeof doAction is 'function'
+        trans_def.action = doAction if typeof doAction is 'function' or typeof doAction is 'string'
         return trans_def
 
     create_state_trans_def = (onState, toState, ifCallback, unlessCallback, doAction) ->
@@ -255,7 +255,10 @@ state_machine = (stateAttrName, options, fn) ->
                 # call transition hooks
                 trans_hooks_called = []
                 for hook in trans_hooks when trans_hooks_called.indexOf(hook) is -1
-                    hook.apply obj, [old_state, current_state]
+                    if typeof hook is 'function'
+                        hook.apply obj, [old_state, current_state]
+                    else if typeof hook is 'string'
+                        obj[hook](old_state, current_state)
                     trans_hooks_called.push(hook)
 
                 return true
