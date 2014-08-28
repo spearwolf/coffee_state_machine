@@ -222,6 +222,9 @@ state_machine = (stateAttrName, options, fn) ->
 
             current_state = obj[stateAttrName]
 
+            if 'object' is typeof props
+                obj[key] = value for key, value of props
+
             trans = (event_fn.transitions or= {})[current_state]
             trans = null if trans? and not check_transition_callbacks(trans)
 
@@ -233,9 +236,6 @@ state_machine = (stateAttrName, options, fn) ->
                             break
             if trans?
                 old_state = current_state
-
-                if 'object' is typeof props
-                    obj[key] = value for key, value of props
 
                 set_new_state(trans.to)
 
