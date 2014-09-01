@@ -128,8 +128,8 @@ state_machine = (stateAttrName, options, fn) ->
     # ========================================
 
     append_common_state_trans_options = (trans_def, ifCallback, unlessCallback, doAction) ->
-        trans_def.if = ifCallback if typeof ifCallback is 'function'
-        trans_def.unless = unlessCallback if typeof unlessCallback is 'function'
+        trans_def.if = ifCallback if typeof ifCallback is 'function' or typeof ifCallback is 'string'
+        trans_def.unless = unlessCallback if typeof unlessCallback is 'function' or typeof unlessCallback is 'string'
         trans_def.action = doAction if typeof doAction is 'function' or typeof doAction is 'string'
         return trans_def
 
@@ -214,7 +214,7 @@ state_machine = (stateAttrName, options, fn) ->
     current_event = null
 
     check_transition_callbacks = (trans) ->
-        (not trans.if? or trans.if.call(obj)) and (not trans.unless? or not trans.unless.call(obj))
+        (not trans.if? or (if typeof trans.if is 'function' then trans.if.call(obj) else obj[trans.if]())) and (not trans.unless? or not (if typeof trans.unless is 'function' then trans.unless.call(obj) else obj[trans.unless]()))
 
     event_builder = (event, callback) ->
 
