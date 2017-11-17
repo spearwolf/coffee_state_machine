@@ -20,7 +20,7 @@ this libray is licensed under the [MIT license](LICENSE).
 *  flexible and very readable DSL based around _states_, _events_ and _transitions_.
    design original based on [pluginaweek/state_machine](https://github.com/pluginaweek/state_machine), but now it's slightly different ..
 
-*  high code-coverage using the [mocha](http://visionmedia.github.com/mocha/) test framework
+*  high code-coverage using the [mocha](http://mochajs.org/) test framework
 
 *  written in 100% [CoffeeScript](http://coffeescript.org/)
 
